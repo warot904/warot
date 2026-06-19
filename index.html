@@ -3,596 +3,1037 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APP ระบบจัดการครุภัณฑ์ - Modern SaaS Dashboard</title>
+    <title>ระบบจัดการครุภัณฑ์และสินทรัพย์อัจฉริยะ</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Sarabun) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsQR Scanner -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         body {
-            font-family: 'Noto Sans Thai', sans-serif;
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .glass-premium {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
     </style>
 </head>
-<body class="bg-slate-50 min-height-screen text-slate-800">
+<body class="min-h-screen flex flex-col text-slate-800">
 
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-500/30 flex items-center justify-center">
-                    <i class="ti ti-box text-xl"></i>
+    <!-- Premium Toast Notification -->
+    <div id="toast-notif" class="fixed top-4 right-4 z-[9999] glass-premium text-slate-900 text-xs px-4 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-80 opacity-0 transition-all duration-300 font-medium border border-white/40 max-w-sm">
+        <div id="toast-bg-icon" class="w-7 h-7 rounded-lg flex items-center justify-center text-white">
+            <i class="fa-solid fa-info" id="toast-icon"></i>
+        </div>
+        <div class="flex-1">
+            <div class="font-bold text-slate-900 text-[13px]" id="toast-title">ระบบแจ้งเตือน</div>
+            <span id="toast-msg" class="text-slate-600 text-[11px]"></span>
+        </div>
+    </div>
+
+    <!-- Header Block -->
+    <header class="bg-[#0f172a] text-white p-5 shadow-xl relative overflow-hidden border-b border-slate-800">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-transparent pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10 gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-wide">APP ระบบจัดการครุภัณฑ์</h1>
-                    <p class="text-[10px] text-slate-400 -mt-1">Asset Management System v2.0</p>
+                    <h1 class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">ระบบจัดการครุภัณฑ์และสินทรัพย์อัจฉริยะ</h1>
+                    <p class="text-xs text-slate-400 font-light mt-0.5">Enterprise Asset & Audit Management Platform</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
-                <div class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div id="sync-status" class="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-emerald-500/20 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>ซิงค์ Google Sheets สำเร็จ ✓</span>
+                    <span id="sync-text">เชื่อมต่อคลาวด์แล้ว</span>
                 </div>
-                
-                <button class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition duration-200 flex items-center justify-center" title="ออกจากระบบ">
-                    <i class="ti ti-logout text-xl"></i>
-                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Mini Stats -->
+        <div class="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6 text-xs">
+            <div class="bg-slate-800/50 border border-slate-700/60 backdrop-blur-md p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ครุภัณฑ์ทั้งหมด</div>
+                <div id="total-assets" class="text-xl font-bold mt-1 font-mono text-blue-400">0</div>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700/60 backdrop-blur-md p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ตรวจนับแล้วปีนี้</div>
+                <div id="checked-assets" class="text-xl font-bold mt-1 font-mono text-emerald-400">0</div>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700/60 backdrop-blur-md p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ชำรุด/ต้องซ่อม</div>
+                <div id="broken-assets" class="text-xl font-bold mt-1 font-mono text-rose-400">0</div>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700/60 backdrop-blur-md p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">รอจำหน่าย</div>
+                <div id="disposal-pending-assets" class="text-xl font-bold mt-1 font-mono text-amber-400">0</div>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700/60 backdrop-blur-md p-4 rounded-xl">
+                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">จำหน่ายแล้ว</div>
+                <div id="disposed-assets" class="text-xl font-bold mt-1 font-mono text-slate-400">0</div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Navigation Tabs -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 pb-24 relative -mt-4 z-20">
+        <div class="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-slate-200/60 p-1.5 mb-6">
+            <nav class="grid grid-cols-3 gap-1">
+                <button onclick="switchTab('list-tab')" id="btn-list-tab" class="nav-tab flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition-all duration-200 bg-slate-900 text-white shadow-md">
+                    <i class="fa-solid fa-boxes-stacked text-sm"></i> คลังครุภัณฑ์
+                </button>
+                <button onclick="switchTab('audit-tab')" id="btn-audit-tab" class="nav-tab flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:bg-slate-50">
+                    <i class="fa-solid fa-clipboard-check text-sm"></i> ตรวจนับประจำปี
+                </button>
+                <button onclick="switchTab('report-tab')" id="btn-report-tab" class="nav-tab flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:bg-slate-50">
+                    <i class="fa-solid fa-chart-line text-sm"></i> แดชบอร์ดสรุป
+                </button>
+            </nav>
+        </div>
 
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
-                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <i class="ti ti-box text-8xl"></i>
+        <!-- TAB 1: ASSET LIST -->
+        <div id="list-tab" class="tab-content active space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="search-input" oninput="handleSearch()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="ค้นหาด่วนด้วย รหัส, ชื่อ, สถานที่, หรือพิมพ์ 'ตรวจแล้ว' / 'ยังไม่ได้ตรวจ'...">
                 </div>
-                <div class="relative z-10">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ครุภัณฑ์ทั้งหมด</span>
-                    <span class="text-3xl font-bold text-slate-800" id="stat-total">6 ชิ้น</span>
-                </div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
-                    <i class="ti ti-boxes"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
-                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <i class="ti ti-circle-check text-8xl"></i>
-                </div>
-                <div class="relative z-10">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ตรวจแล้วปีนี้</span>
-                    <span class="text-3xl font-bold text-emerald-600" id="stat-audited">4 ชิ้น</span>
-                </div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
-                    <i class="ti ti-circle-check"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
-                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <i class="ti ti-category text-8xl"></i>
-                </div>
-                <div class="relative z-10">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">หมวดหมู่ระบบ</span>
-                    <span class="text-3xl font-bold text-indigo-600">3 หมวด</span>
-                </div>
-                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
-                    <i class="ti ti-category"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
-                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <i class="ti ti-alert-circle text-8xl"></i>
-                </div>
-                <div class="relative z-10">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">รอการตรวจสอบ</span>
-                    <span class="text-3xl font-bold text-amber-500" id="stat-pending">2 ชิ้น</span>
-                </div>
-                <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
-                    <i class="ti ti-clock-hour-4"></i>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div class="flex flex-col sm:flex-row items-stretch gap-3 flex-1 max-w-2xl">
-                    <div class="relative flex-1">
-                        <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                        <input type="text" id="searchInput" oninput="filterAssets()" placeholder="พิมพ์ชื่อ, รหัส หรือผู้ดูแล เพื่อค้นหาด่วน..." 
-                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-200">
-                    </div>
-                    <button class="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-slate-50 transition">
-                        <i class="ti ti-adjustments-horizontal text-lg"></i>
-                        <span>ตัวกรองขั้นสูง</span>
-                    </button>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <button onclick="openModal('addModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/10 transition duration-200">
-                        <i class="ti ti-plus text-base"></i>
-                        <span>เพิ่มครุภัณฑ์ใหม่</span>
-                    </button>
-                    <button onclick="openModal('scanModal')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 transition duration-200">
-                        <i class="ti ti-qrcode text-base"></i>
-                        <span>สแกน QR Code</span>
-                    </button>
-                    <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 transition">
-                        <i class="ti ti-file-download text-base"></i>
-                        <span>นำเข้า</span>
-                    </button>
-                    <button class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition">
-                        <i class="ti ti-file-spreadsheet text-base"></i>
-                        <span>ส่งออก Excel</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">รายการครุภัณฑ์ทั้งหมด</h2>
-                <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md" id="showing-count">แสดงผล 6 รายการ</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="assetGrid">
                 
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="Keyboard Dell Latitude" data-code="KB-001" data-owner="วิชัย เก่งมาก">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">คอมพิวเตอร์</span>
-                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">Keyboard Dell Latitude 5420</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">KB-001</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ฝ่ายไอที</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">วิชัย เก่งมาก</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2566</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿35,000</span>
-                            </div>
-                        </div>
+                <div class="flex flex-wrap justify-between items-center gap-3 pt-1">
+                    <!-- เพิ่มปุ่มกรองตามข้อ 1 -->
+                    <div class="flex flex-wrap gap-1.5" id="status-filters">
+                        <button onclick="filterStatus('ทั้งหมด')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-900 text-white transition-all shadow-sm">ทั้งหมด</button>
+                        <button onclick="filterStatus('สภาพดี')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">สภาพดี</button>
+                        <button onclick="filterStatus('ชำรุด')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">ชำรุด</button>
+                        <button onclick="filterStatus('รอตรวจ')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">รอตรวจ</button>
+                        <button onclick="filterStatus('รอจำหน่าย')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all text-amber-600">รอจำหน่าย</button>
+                        <button onclick="filterStatus('จำหน่ายแล้ว')" class="status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all text-slate-500">จำหน่ายแล้ว</button>
                     </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
-                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="เครื่องปรับอากาศ Mitsubishi" data-code="AC-002" data-owner="สมศักดิ์ มั่นคง">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เครื่องใช้ไฟฟ้า</span>
-                            <span class="status-badge bg-rose-50 text-rose-700 border border-rose-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ชำรุด</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">เครื่องปรับอากาศ Mitsubishi 18000 BTU</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">AC-002</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ห้องผู้อำนวยการ</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">สมศักดิ์ มั่นคง</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2565</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿28,000</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
-                            <i class="ti ti-square text-sm"></i> <span>รอตรวจสอบ</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto flex-wrap">
+                      <button onclick="selectAllDisplayedAssets()" class="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg border border-blue-200 transition-all">
+                          <i class="fa-solid fa-check-square"></i> เลือกทั้งหมดที่แสดง
+                      </button>
+                      <button onclick="clearAllSelectedAssets()" class="text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-lg border border-slate-300 transition-all">
+                          <i class="fa-solid fa-square"></i> ล้างการเลือก
+                      </button>
+                  
+                      <button onclick="exportToExcel()" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-2 rounded-lg text-[11px] font-bold transition shadow-sm">
+                          <i class="fa-solid fa-file-excel"></i> ส่งออก Excel
+                      </button>
+                      
+                      <button id="btn-mass-print-trigger" onclick="openMassPrintModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-slate-500 text-white hover:bg-slate-600 px-3 py-2 rounded-lg text-[11px] font-bold transition shadow-sm">
+                          <i class="fa-solid fa-print"></i> เลือกพิมพ์ป้าย QR
+                      </button>
+                      
+                      <button onclick="openImportModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-lg text-[11px] font-bold transition shadow-sm">
+                          <i class="fa-solid fa-file-import"></i> นำเข้าข้อมูล
+                      </button>
+                  </div>
                 </div>
-
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="เก้าอี้สำนักงาน Office Pro" data-code="CHR-005" data-owner="ห้องประชุม">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เฟอร์นิเจอร์</span>
-                            <span class="status-badge bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">รอตรวจ</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">เก้าอี้สำนักงาน Office Pro</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">CHR-005</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ห้องประชุม</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">ไม่ระบุผู้ดูแล</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2564</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿3,200</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
-                            <i class="ti ti-square text-sm"></i> <span>รอตรวจสอบ</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โน้ตบุ๊ก HP ProBook" data-code="NB-004" data-owner="กิตติพงษ์ ใจดี">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">คอมพิวเตอร์</span>
-                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โน้ตบุ๊ก HP ProBook 450 G9</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">NB-004</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ฝ่ายบัญชี</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">กิตติพงษ์ ใจดี</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2566</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿29,900</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
-                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โต๊ะทำงานอเนกประสงค์" data-code="TB-012" data-owner="พัสดุกลาง">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เฟอร์นิเจอร์</span>
-                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โต๊ะทำงานอเนกประสงค์ พับได้</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">TB-012</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ห้องอาหารชั้น 2</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">พัสดุกลาง</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2564</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿1,850</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
-                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โปรเจคเตอร์ Epson" data-code="PJ-009" data-owner="สมชาย รักเรียน">
-                    <div class="p-5 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เครื่องใช้ไฟฟ้า</span>
-                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โปรเจคเตอร์ Epson EB-X06</h3>
-                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">PJ-009</span></p>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
-                                <span class="truncate">ห้องประชุมใหญ่</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-user text-slate-400 text-base"></i>
-                                <span class="truncate">สมชาย รักเรียน</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-calendar text-slate-400 text-base"></i>
-                                <span>ปีงบฯ 2565</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i class="ti ti-coin text-slate-400 text-base"></i>
-                                <span class="font-semibold text-slate-700">฿19,500</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
-                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
-                        </button>
-                        <div class="flex items-center gap-1.5">
-                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
-                                <i class="ti ti-edit text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
-                                <i class="ti ti-qrcode text-base"></i>
-                            </button>
-                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
-                                <i class="ti ti-trash text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
-            
-            <div id="noResults" class="hidden bg-white rounded-2xl border border-slate-100 p-12 shadow-sm text-center">
-                <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
-                    <i class="ti ti-search-off"></i>
-                </div>
-                <h3 class="text-base font-bold text-slate-700">ไม่พบข้อมูลครุภัณฑ์ที่ค้นหา</h3>
-                <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองข้อมูล</p>
+
+            <div id="assets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Data Render via JS -->
             </div>
-        </section>
+        </div>
+
+        <!-- TAB 2: AUDIT LOGS & ACTIONS -->
+        <div id="audit-tab" class="tab-content space-y-4">
+            <div class="bg-slate-900 text-white p-5 rounded-xl shadow-lg border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-qrcode text-blue-400"></i> ศูนย์ตรวจนับและสแกนสอบทานคลัง</h3>
+                    <p class="text-[11px] text-slate-400 mt-1">เจ้าหน้าที่สามารถสแกนบาร์โค้ดจากป้าย หรือ ค้นหาเพื่อติ๊กตรวจด่วนประหยัดเวลา</p>
+                </div>
+                <button onclick="openScannerModal()" class="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xs px-5 py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-camera"></i> เปิดกล้องสแกน QR ตรวจนับ
+                </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-filter text-xs"></i>
+                    </span>
+                    <input type="text" id="audit-search-input" oninput="handleAuditSearch()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="พิมพ์เพื่อค้นหาครุภัณฑ์ที่ต้องการตรวจนับด่วนที่นี่...">
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                    <h2 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-history text-slate-500"></i> ประวัติล็อกการตรวจนับครุภัณฑ์ล่าสุด
+                    </h2>
+                    <button onclick="clearAuditHistory()" class="text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg border border-rose-200 transition-all">
+                        ล้างประวัติประมวลผล
+                    </button>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                <th class="p-3">ครุภัณฑ์ (รหัส/ชื่อ)</th>
+                                <th class="p-3">วันเวลาตรวจสอบ</th>
+                                <th class="p-3 text-center">สถานะหลังตรวจ</th>
+                                <th class="p-3">เจ้าหน้าที่ผู้ตรวจ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-logs-table" class="divide-y divide-slate-100 text-slate-700">
+                            <!-- JS Inject -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: REPORTS -->
+        <div id="report-tab" class="tab-content space-y-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-500"></i> รายงานสรุปสัดส่วนแยกตามหมวดหมู่ครุภัณฑ์ (Category Summary)
+                </h2>
+                <div id="category-summary-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
+            </div>
+        </div>
     </main>
 
-    <div id="addModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="ti ti-circle-plus text-xl text-blue-400"></i>
-                    <h3 class="font-bold">เพิ่มรายการครุภัณฑ์ใหม่</h3>
-                </div>
-                <button onclick="closeModal('addModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+    <!-- FAB: Add Button -->
+    <button onclick="openCreateModal()" class="fixed bottom-6 right-6 bg-slate-900 hover:bg-slate-800 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl border border-slate-700 hover:scale-105 active:scale-95 transition-all z-40" title="เพิ่มข้อมูลชิ้นใหม่">
+        <i class="fa-solid fa-plus text-lg"></i>
+    </button>
+
+    <!-- FOOTER -->
+    <footer class="bg-[#0f172a] text-slate-400 text-[11px] py-6 border-t border-slate-800 mt-auto text-center px-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="text-slate-500">© 2026 Enterprise Asset & Inventory Engine. All Rights Reserved.</div>
+            <div class="bg-slate-800/60 px-4 py-1.5 rounded-full border border-slate-700 text-slate-300 font-medium">
+                <i class="fa-solid fa-code text-blue-400 mr-1.5"></i>ระบบนี้พัฒนาขึ้นและถือลิขสิทธิ์โดย: <span class="text-white font-bold underline decoration-indigo-400">คุณวรท เกษเพ็ชร์</span>
             </div>
-            <div class="p-5 grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่อครุภัณฑ์ *</label>
-                    <input type="text" placeholder="ระบุชื่อสิ่งของ เช่น โน้ตบุ๊ก Dell" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">รหัสครุภัณฑ์ *</label>
-                    <input type="text" placeholder="เช่น NB-005" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">หมวดหมู่ *</label>
-                    <select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>คอมพิวเตอร์</option>
-                        <option>เครื่องใช้ไฟฟ้า</option>
-                        <option>เฟอร์นิเจอร์</option>
-                        <option>อื่นๆ</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">ปีงบประมาณ</label>
-                    <input type="number" placeholder="2569" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">ราคาทุน (บาท)</label>
-                    <input type="number" placeholder="0.00" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">แผนก/สถานที่จัดวาง</label>
-                    <input type="text" placeholder="เช่น ฝ่ายไอที ชั้น 3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">ผู้รับผิดชอบดูแล</label>
-                    <input type="text" placeholder="ชื่อ-นามสกุล" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+    </footer>
+
+    <!-- MODAL: ASSET FORM (เพิ่มสถานะใหม่ตามข้อ 1) -->
+    <div id="asset-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="modal-title" class="text-sm font-bold text-slate-800"></h3>
+                <button onclick="closeModal('asset-modal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 flex-1 text-xs text-slate-700">
+                <input type="hidden" id="form-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1 col-span-2 sm:col-span-1">
+                        <label class="font-bold text-slate-600">รหัสครุภัณฑ์ <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form-code" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none transition-all">
+                    </div>
+                    <div class="flex flex-col gap-1 col-span-2 sm:col-span-1">
+                        <label class="font-bold text-slate-600">ชื่อรายการครุภัณฑ์ <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form-name" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none transition-all">
+                    </div>
+                    <div class="flex flex-col gap-1 col-span-2">
+                        <label class="font-bold text-slate-600">หมวดหมู่ครุภัณฑ์</label>
+                        <input type="text" id="form-cat" list="category-suggestions" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none transition-all" placeholder="เช่น คอมพิวเตอร์, เฟอร์นิเจอร์...">
+                        <datalist id="category-suggestions">
+                            <option value="คอมพิวเตอร์"><option value="เฟอร์นิเจอร์"><option value="เครื่องใช้ไฟฟ้า"><option value="สำนักงาน">
+                        </datalist>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-bold text-slate-600">สถานที่/ห้องวางระบบ</label>
+                        <input type="text" id="form-room" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-bold text-slate-600">ผู้รับผิดชอบดูแล</label>
+                        <input type="text" id="form-owner" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-bold text-slate-600">ปีงบประมาณที่ได้มา (พ.ศ.)</label>
+                        <input type="text" id="form-year" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-bold text-slate-600">ราคาทุนทรัพย์</label>
+                        <input type="number" id="form-price" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1 col-span-2">
+                        <label class="font-bold text-slate-600">สถานะเริ่มต้น</label>
+                        <select id="form-status" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                            <option value="สภาพดี">สภาพดี</option>
+                            <option value="ชำรุด">ชำรุด</option>
+                            <option value="รอตรวจ">รอตรวจ</option>
+                            <option value="รอจำหน่าย">รอจำหน่าย</option>
+                            <option value="จำหน่ายแล้ว">จำหน่ายแล้ว</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="bg-slate-50 px-5 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button onclick="closeModal('addModal')" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">ยกเลิก</button>
-                <button onclick="alert('จำลอง: บันทึกข้อมูลสำเร็จค้บ!'); closeModal('addModal');" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/10 transition">บันทึกรายการ</button>
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 text-xs font-bold">
+                <button onclick="closeModal('asset-modal')" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-600">ยกเลิก</button>
+                <button onclick="saveAssetForm()" class="px-5 py-2 rounded-lg bg-slate-900 text-white shadow-md">บันทึกข้อมูลเข้าฐาน</button>
             </div>
         </div>
     </div>
 
-    <div id="scanModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="ti ti-camera text-xl text-amber-400"></i>
-                    <h3 class="font-bold">สแกนตรวจสอบด้วย QR</h3>
-                </div>
-                <button onclick="closeModal('scanModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+    <!-- MODAL: TICK บันทึกการตรวจนับด่วน (เพิ่มปุ่มตัวเลือกสถานะใหม่ตามข้อ 1) -->
+    <div id="manual-audit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-4 py-3.5 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-square-check text-emerald-400"></i> ลงบันทึกประวัติการตรวจสอบสภาพ
+                </h3>
+                <button onclick="closeModal('manual-audit-modal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 text-center">
-                <div class="w-full aspect-square bg-slate-950 rounded-2xl relative overflow-hidden flex flex-col items-center justify-center border-2 border-slate-800 shadow-inner">
-                    <div class="absolute w-full h-0.5 bg-red-500 top-0 left-0 shadow-lg shadow-red-500 animate-[bounce_2s_infinite]"></div>
-                    
-                    <div class="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-amber-400 rounded-tl-sm"></div>
-                    <div class="absolute top-4 right-4 w-6 h-6 border-t-4 border-r-4 border-amber-400 rounded-tr-sm"></div>
-                    <div class="absolute bottom-4 left-4 w-6 h-6 border-b-4 border-l-4 border-amber-400 rounded-bl-sm"></div>
-                    <div class="absolute bottom-4 right-4 w-6 h-6 border-b-4 border-r-4 border-amber-400 rounded-br-sm"></div>
-                    
-                    <i class="ti ti-qrcode text-6xl text-slate-700 animate-pulse"></i>
-                    <p class="text-xs text-slate-500 mt-2 font-medium px-4">กำลังเปิดกล้องระบบสแกนอัตโนมัติ...</p>
+            <div class="p-5 space-y-4 text-xs text-slate-700">
+                <input type="hidden" id="audit-target-id">
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div class="text-slate-400 font-mono text-[10px]" id="audit-target-code">CODE</div>
+                    <div class="text-sm font-bold text-slate-800 mt-0.5" id="audit-target-name">ASSET_NAME</div>
                 </div>
-                <p class="text-xs text-slate-400 mt-4">กรุณานำกล้องไปส่องที่ป้ายสติกเกอร์ QR Code บนตัววัตถุ</p>
+                <div class="flex flex-col gap-1">
+                    <label class="font-bold text-slate-600">ชื่อเจ้าหน้าที่ผู้ดำเนินการตรวจสอบ</label>
+                    <input type="text" id="audit-checker-name" class="border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="font-bold text-slate-600">ผลสรุปสภาพและอัปเดตสถานะครุภัณฑ์</label>
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <label class="flex items-center gap-1.5 border border-slate-200 p-2 rounded-lg cursor-pointer bg-slate-50 hover:bg-white">
+                            <input type="radio" name="audit-status-choice" value="สภาพดี" checked class="w-3.5 h-3.5 text-emerald-600">
+                            <span class="font-bold text-emerald-700">สภาพดี</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 border border-slate-200 p-2 rounded-lg cursor-pointer bg-slate-50 hover:bg-white">
+                            <input type="radio" name="audit-status-choice" value="ชำรุด" class="w-3.5 h-3.5 text-rose-600">
+                            <span class="font-bold text-rose-700">ชำรุด</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 border border-slate-200 p-2 rounded-lg cursor-pointer bg-slate-50 hover:bg-white">
+                            <input type="radio" name="audit-status-choice" value="รอจำหน่าย" class="w-3.5 h-3.5 text-amber-600">
+                            <span class="font-bold text-amber-700">รอจำหน่าย</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 border border-slate-200 p-2 rounded-lg cursor-pointer bg-slate-50 hover:bg-white">
+                            <input type="radio" name="audit-status-choice" value="จำหน่ายแล้ว" class="w-3.5 h-3.5 text-slate-500">
+                            <span class="font-bold text-slate-600">จำหน่ายแล้ว</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 text-center">
-                <button onclick="closeModal('scanModal')" class="w-full py-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">ปิดหน้าต่าง</button>
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 text-xs font-bold">
+                <button onclick="closeModal('manual-audit-modal')" class="px-3 py-2 rounded-lg bg-slate-200 text-slate-600">ยกเลิก</button>
+                <button onclick="submitManualAudit()" class="px-4 py-2 rounded-lg bg-slate-900 text-white shadow-md">บันทึกผลตรวจสอบ</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL: QR SCANNER CAMERA MODULE -->
+    <div id="scanner-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-4 py-3.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-qrcode text-rose-500 animate-pulse"></i> กำลังสแกนบาร์โค้ดครุภัณฑ์ผ่านกล้อง...</h3>
+                <button onclick="closeScannerModal()" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 flex flex-col items-center gap-4">
+                <div class="w-full aspect-square bg-black rounded-xl overflow-hidden relative border-2 border-slate-800">
+                    <video id="scanner-video" class="w-full h-full object-cover" playsinline></video>
+                    <div class="absolute inset-x-4 top-1/2 h-0.5 bg-rose-500 shadow-[0_0_8px_#f43f5e] animate-bounce"></div>
+                </div>
+                <div class="text-xs text-center text-slate-500" id="scanner-status">ส่องกล้องสติกเกอร์คิวอาร์โค้ดของไอเทมเพื่อตรวจเช็คด่วนอัตโนมัติ</div>
+            </div>
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-end text-xs font-bold">
+                <button onclick="closeScannerModal()" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-600">ปิดเลนส์กล้อง</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- MODAL: EXCEL BULK IMPORT -->
+    <div id="import-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-4 py-3.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xs font-bold text-slate-800">นำเข้าคลังผ่านชุดเอกสาร Excel</h3>
+                <button onclick="closeModal('import-modal')" class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs text-slate-600">
+                <div class="bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-xl p-3.5 leading-relaxed">
+                    <strong>💡 แบบฟอร์มมาตรฐานในการนำเข้า:</strong><br>
+                    เพื่อความเสถียร กรุณาใช้ไฟล์ที่มีแถวหัวตารางตรงตามมาตรฐานระบบ หรือกดโหลดแบบฟอร์มจากปุ่มด้านล่างนี้ได้เลยครับ
+                </div>
+                <div class="text-center">
+                    <button onclick="downloadStandardTemplate()" class="inline-flex items-center gap-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg font-bold border border-indigo-200 transition-all">
+                        <i class="fa-solid fa-cloud-download"></i> ดาวน์โหลดไฟล์แบบฟอร์มมาตรฐาน (.xlsx)
+                    </button>
+                </div>
+                <div class="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <label class="font-bold text-slate-700">อัปโหลดไฟล์ Excel ที่กรอกเสร็จแล้ว</label>
+                    <input type="file" id="excel-file-input" accept=".xlsx" class="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 text-xs">
+                </div>
+            </div>
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 text-xs font-bold">
+                <button onclick="closeModal('import-modal')" class="px-3 py-2 rounded-lg bg-slate-200 text-slate-600">ปิด</button>
+                <button onclick="handleExcelImport()" class="px-4 py-2 rounded-lg bg-indigo-600 text-white">ดำเนินการอัปโหลดข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: QR LABEL PREVIEW & PRINT -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-4 py-3.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xs font-bold text-slate-800">หน้าต่างป้ายทะเบียนสติกเกอร์ QR (ระบบจัดเลย์เอาต์คู่ประหยัดพื้นที่)</h3>
+                <button onclick="closeModal('qr-modal')" class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto max-h-[60vh] bg-slate-100">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center" id="qr-printable-area"></div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2 text-xs font-bold">
+                <button onclick="closeModal('qr-modal')" class="px-3 py-2 rounded-lg bg-gray-200 text-gray-600">ปิด</button>
+                <button onclick="printQrLabels()" class="px-4 py-2 rounded-lg bg-rose-600 text-white shadow-md"><i class="fa-solid fa-print"></i> เริ่มพิมพ์สติกเกอร์ครุภัณฑ์</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
     <script>
-        // 1. ฟังก์ชันเปิด-ปิด Modal ป๊อปอัป
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
+        const BACKEND_API = 'https://script.google.com/macros/s/AKfycbzcJhvZMukwlB5k4SZyBisycEJ3c0tHn35pDnEsDNF14FVEyHVJHDVpZCPp5aEUSJYi/exec';
+
+        let selectedAssetIds = [];
+        let assetsData = [];
+        let auditLogs = [];
+        let filterStatusActive = 'ทั้งหมด';
+        let searchQuery = '';
+        let auditSearchQuery = '';
+        let videoStream = null;
+        let animationFrameId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const cacheAssets = localStorage.getItem('local_assets');
+            const cacheLogs = localStorage.getItem('local_audits');
+            if (cacheAssets) { assetsData = JSON.parse(cacheAssets); renderAssets(); updateInterfaceStats(); }
+            if (cacheLogs) { auditLogs = JSON.parse(cacheLogs); renderAuditLogs(); }
+            syncWithGoogleSheets();
+        });
+
+        async function syncWithGoogleSheets() {
+            if (!BACKEND_API) { setSyncUI('error', 'ไม่ได้ระบุลิงก์ API'); return; }
+            setSyncUI('loading', 'กำลังซิงค์ฐานข้อมูล...');
+            try {
+                const response = await fetch(`${BACKEND_API}?action=getAll`);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    assetsData = data;
+                    localStorage.setItem('local_assets', JSON.stringify(assetsData));
+                    try {
+                        const logsRes = await fetch(`${BACKEND_API}?action=getChecks`);
+                        const logsData = await logsRes.json();
+                        if (typeof logsData === 'object') {
+                            auditLogs = Object.keys(logsData).map(k => ({
+                                id: k, code: logsData[k].code || 'N/A', name: logsData[k].name || 'สินทรัพย์เก่า', at: logsData[k].at, by: logsData[k].by
+                            }));
+                            localStorage.setItem('local_audits', JSON.stringify(auditLogs));
+                        }
+                    } catch(e){}
+                    setSyncUI('success', 'ระบบออนไลน์: ข้อมูลอัปเดตล่าสุด'); renderAssets(); renderAuditLogs(); updateInterfaceStats();
+                }
+            } catch (err) {
+                setSyncUI('error', 'ระบบออฟไลน์: ใช้ฐานข้อมูลในเครื่อง');
+            }
         }
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
+
+        function setSyncUI(status, text) {
+            const dot = document.querySelector('#sync-status span');
+            const txt = document.getElementById('sync-text');
+            txt.textContent = text;
+            if (status === 'success') {
+                document.getElementById('sync-status').className = "flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-500/20";
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+            } else if (status === 'loading') {
+                document.getElementById('sync-status').className = "flex items-center gap-2 bg-amber-500/10 text-amber-500 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-500/20";
+                dot.className = "w-2 h-2 rounded-full bg-amber-500 animate-spin";
+            } else {
+                document.getElementById('sync-status').className = "flex items-center gap-2 bg-rose-500/10 text-rose-500 px-3 py-1.5 rounded-xl text-xs font-bold border border-rose-500/20";
+                dot.className = "w-2 h-2 rounded-full bg-rose-500";
+            }
         }
 
-        // 2. ฟังก์ชันระบบค้นหาด่วนแบบ Realtime
-        function filterAssets() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.getElementsByClassName('asset-card');
-            let visibleCount = 0;
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast-notif');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-msg').textContent = message;
+            const iconWrap = document.getElementById('toast-bg-icon');
+            const icon = document.getElementById('toast-icon');
 
-            for (let i = 0; i < cards.length; i++) {
-                const name = cards[i].getAttribute('data-name').toLowerCase();
-                const code = cards[i].getAttribute('data-code').toLowerCase();
-                const owner = cards[i].getAttribute('data-owner').toLowerCase();
+            if(type === 'error') {
+                iconWrap.className = "w-7 h-7 rounded-lg flex items-center justify-center text-white bg-rose-500 shadow-sm";
+                icon.className = "fa-solid fa-triangle-exclamation";
+            } else if(type === 'info') {
+                iconWrap.className = "w-7 h-7 rounded-lg flex items-center justify-center text-white bg-blue-500 shadow-sm";
+                icon.className = "fa-solid fa-clock-rotate-left";
+            } else {
+                iconWrap.className = "w-7 h-7 rounded-lg flex items-center justify-center text-white bg-emerald-500 shadow-sm";
+                icon.className = "fa-solid fa-circle-check";
+            }
 
-                if (name.includes(input) || code.includes(input) || owner.includes(input)) {
-                    cards[i].style.display = "flex";
-                    visibleCount++;
+            toast.classList.remove('translate-x-80', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+            setTimeout(() => { toast.classList.remove('translate-x-0', 'opacity-100'); toast.classList.add('translate-x-80', 'opacity-0'); }, 3500);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.className = "nav-tab flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition-all duration-200 text-slate-600 hover:bg-slate-50";
+            });
+            document.getElementById(`btn-${tabId}`).className = "nav-tab flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition-all duration-200 bg-slate-900 text-white shadow-md";
+        }
+
+        // ปรับฟังก์ชันการคำนวณยอดสถิติตามข้อ 1
+        function updateInterfaceStats() {
+            document.getElementById('total-assets').textContent = assetsData.length;
+            const currentYear = new Date().getFullYear() + 543;
+            const currentYearCheckedCount = auditLogs.filter(log => {
+                if(!log.at) return false;
+                return (new Date(log.at).getFullYear() + 543) === currentYear;
+            }).length;
+            document.getElementById('checked-assets').textContent = currentYearCheckedCount;
+            document.getElementById('broken-assets').textContent = assetsData.filter(a => a.status === 'ชำรุด').length;
+            document.getElementById('disposal-pending-assets').textContent = assetsData.filter(a => a.status === 'รอจำหน่าย').length;
+            document.getElementById('disposed-assets').textContent = assetsData.filter(a => a.status === 'จำหน่ายแล้ว').length;
+            
+            const catMap = {};
+            assetsData.forEach(a => { const cat = a.cat || 'ไม่ระบุหมวดหมู่'; catMap[cat] = (catMap[cat] || 0) + 1; });
+            const reportContainer = document.getElementById('category-summary-list');
+            if (Object.keys(catMap).length === 0) {
+                reportContainer.innerHTML = `<p class="col-span-full text-center text-slate-400 py-4 italic">ยังไม่มีข้อมูลแยกประเภท</p>`;
+            } else {
+                reportContainer.innerHTML = Object.keys(catMap).map(cat => `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200/60 hover:bg-slate-100/50 transition-all">
+                        <span class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-tag text-indigo-400 text-[10px]"></i> ${cat}</span>
+                        <span class="bg-slate-900 text-white font-bold px-2.5 py-0.5 rounded-lg text-[11px] font-mono">${catMap[cat]} ชิ้น</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function handleSearch() { searchQuery = document.getElementById('search-input').value.toLowerCase().trim(); renderAssets(); }
+        function handleAuditSearch() { auditSearchQuery = document.getElementById('audit-search-input').value.toLowerCase().trim(); renderAuditLogs(); }
+
+        function filterStatus(status) {
+            filterStatusActive = status;
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                let baseClass = "status-filter-btn px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all ";
+                if (btn.textContent === status) {
+                    btn.className = baseClass + "bg-slate-900 text-white shadow-sm border-slate-900";
                 } else {
-                    cards[i].style.display = "none";
+                    btn.className = baseClass + "bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+                }
+            });
+            renderAssets();
+        }
+
+        // ปรับปรุงฟังก์ชันการวาดการ์ดแสดงผลให้ระบุป้าย "ตรวจนับแล้ว / ยังไม่ตรวจ" ตามข้อ 2
+        // ปรับปรุงฟังก์ชันการวาดการ์ดแสดงผลให้ระบุป้าย "ตรวจนับแล้ว / ยังไม่ตรวจ" ตามข้อ 2
+function renderAssets() {
+    const container = document.getElementById('assets-container');
+    const currentYear = new Date().getFullYear() + 543;
+
+    const filtered = assetsData.filter(a => {
+        const matchStatus = filterStatusActive === 'ทั้งหมด' || a.status === filterStatusActive;
+        const hasBeenCheckedThisYear = auditLogs.some(log => log.id === a.id && log.at && (new Date(log.at).getFullYear() + 543) === currentYear);
+        
+        if (searchQuery === 'ตรวจแล้ว') { return matchStatus && hasBeenCheckedThisYear; }
+        if (searchQuery === 'ยังไม่ได้ตรวจ' || searchQuery === 'ยังไม่ตรวจ') { return matchStatus && !hasBeenCheckedThisYear; }
+
+        const matchSearch = !searchQuery || 
+            (a.name && a.name.toLowerCase().includes(searchQuery)) ||
+            (a.code && a.code.toLowerCase().includes(searchQuery)) ||
+            (a.room && a.room.toLowerCase().includes(searchQuery)) ||
+            (a.cat && a.cat.toLowerCase().includes(searchQuery)) ||
+            (a.owner && a.owner.toLowerCase().includes(searchQuery));
+            
+        return matchStatus && matchSearch;
+    });
+
+    if(filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full bg-white p-10 rounded-xl border border-slate-200 text-center text-slate-400 italic text-xs">ไม่พบรายการครุภัณฑ์ตรงตามเงื่อนไข</div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(a => {
+        let badgeClass = "bg-amber-50 text-amber-700 border-amber-200";
+        if (a.status === 'สภาพดี') badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (a.status === 'ชำรุด') badgeClass = "bg-rose-50 text-rose-700 border-rose-200";
+        if (a.status === 'รอจำหน่าย') badgeClass = "bg-orange-50 text-orange-700 border-orange-200";
+        if (a.status === 'จำหน่ายแล้ว') badgeClass = "bg-slate-100 text-slate-600 border-slate-300";
+
+        const logFound = auditLogs.find(log => log.id === a.id && log.at && (new Date(log.at).getFullYear() + 543) === currentYear);
+        let auditProgressBadge = `
+            <div class="flex items-center gap-1 text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-1 rounded-lg font-bold w-fit mt-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span> ยังไม่ได้ตรวจนับในปีนี้
+            </div>
+        `;
+        if(logFound) {
+            const timeStr = new Date(logFound.at).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
+            auditProgressBadge = `
+                <div class="flex flex-col gap-0.5 mt-2 bg-emerald-50/70 border border-emerald-100 p-2 rounded-lg text-[10px]">
+                    <div class="text-emerald-700 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> ✓ ตรวจนับแล้ว (${timeStr})
+                    </div>
+                    <div class="text-slate-500">โดย: ${logFound.by || 'เจ้าหน้าที่'}</div>
+                </div>
+            `;
+        }
+
+        // ตรวจสอบว่าครุภัณฑ์ชิ้นนี้เคยถูกติ๊กเลือกไว้หรือไม่
+        const isChecked = selectedAssetIds.includes(a.id) ? 'checked' : '';
+
+        return `
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-all flex flex-col justify-between group relative">
+                <div class="absolute top-4 left-4 z-10 flex items-center bg-white/90 p-1 rounded-md shadow-sm border border-slate-200">
+                    <input type="checkbox" ${isChecked} onchange="toggleSelectAsset('${a.id}')" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                </div>
+
+                <div class="pl-7"> <div class="flex justify-between items-start gap-2 mb-2">
+                        <span class="bg-slate-100 text-slate-800 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200">${a.code || 'NO-CODE'}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeClass}">${a.status || 'รอตรวจ'}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-900 text-[13px] leading-snug mb-1 group-hover:text-blue-600 transition-all">${a.name || 'ไม่ระบุชื่อ'}</h4>
+                    <div class="text-[10px] text-indigo-600 font-bold mb-3 flex items-center gap-1"><i class="fa-solid fa-tag"></i> หมวด: ${a.cat || 'ทั่วไป'}</div>
+                    
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] text-slate-500 border-t border-dashed border-slate-100 pt-2.5 mb-2">
+                        <div class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-location-dot text-slate-400"></i> ${a.room || '-'}</div>
+                        <div class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-user text-slate-400"></i> ${a.owner || '-'}</div>
+                        <div class="flex items-center gap-1.5"><i class="fa-solid fa-calendar text-slate-400"></i> ปี พ.ศ. ${a.year || '-'}</div>
+                        <div class="flex items-center gap-1.5 font-bold text-slate-700"><i class="fa-solid fa-baht-sign text-slate-400"></i> ${a.price ? Number(a.price).toLocaleString() : '-'}</div>
+                    </div>
+
+                    ${auditProgressBadge}
+                </div>
+                
+                <div class="flex gap-1 pt-2 border-t border-slate-100 mt-3 pl-7">
+                    <button onclick="openManualAuditModal('${a.id}')" class="px-2.5 py-1.5 rounded bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 transition-all text-[11px] font-bold">
+                        <i class="fa-solid fa-square-check"></i> ตรวจนับ
+                    </button>
+                    <button onclick="openEditModal('${a.id}')" class="flex-1 py-1.5 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-bold transition-all">
+                        <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+                    </button>
+                    <button onclick="generateSingleQRLabel('${a.id}')" class="px-2.5 py-1.5 rounded bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 text-slate-500 transition-all text-[11px]">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </button>
+                    <button onclick="deleteAssetItem('${a.id}')" class="px-2.5 py-1.5 rounded bg-slate-50 hover:bg-red-50 hover:text-red-600 border border-slate-200 text-slate-400 transition-all text-[11px]">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+        function openManualAuditModal(id) {
+            const item = assetsData.find(a => a.id === id); if(!item) return;
+            document.getElementById('audit-target-id').value = item.id;
+            document.getElementById('audit-target-code').textContent = item.code || 'N/A';
+            document.getElementById('audit-target-name').textContent = item.name || 'ไม่ระบุชื่อ';
+            document.getElementById('audit-checker-name').value = localStorage.getItem('last_checker') || 'เจ้าหน้าที่ผู้ตรวจสอบ';
+            
+            // ติ๊กสถานะปัจจุบันของของชิ้นนั้นไว้ให้ตอนเปิดหน้าต่าง
+            const currentStatus = item.status || 'สภาพดี';
+            const targetRadio = document.querySelector(`input[name="audit-status-choice"][value="${currentStatus}"]`);
+            if(targetRadio) targetRadio.checked = true; else document.querySelector(`input[name="audit-status-choice"][value="สภาพดี"]`).checked = true;
+
+            document.getElementById('manual-audit-modal').classList.remove('hidden');
+        }
+
+        async function submitManualAudit() {
+            const id = document.getElementById('audit-target-id').value;
+            const checkerName = document.getElementById('audit-checker-name').value.trim() || 'เจ้าหน้าที่';
+            const statusChoice = document.querySelector('input[name="audit-status-choice"]:checked').value;
+            const assetIndex = assetsData.findIndex(a => a.id === id); if(assetIndex === -1) return;
+
+            localStorage.setItem('last_checker', checkerName);
+            closeModal('manual-audit-modal');
+            showToast('⏳ ดำเนินการการบันทึกข้อมูล', 'ระบบกำลังส่งบันทึกผลไปยังหลังบ้านคลาวด์โปรดรอซักครู่...', 'info');
+
+            assetsData[assetIndex].status = statusChoice;
+            localStorage.setItem('local_assets', JSON.stringify(assetsData));
+
+            const newLog = {
+                id: assetsData[assetIndex].id,
+                code: assetsData[assetIndex].code,
+                name: assetsData[assetIndex].name,
+                at: new Date().toISOString(),
+                by: checkerName
+            };
+            auditLogs = auditLogs.filter(log => log.id !== id);
+            auditLogs.push(newLog);
+            localStorage.setItem('local_audits', JSON.stringify(auditLogs));
+            
+            renderAssets(); renderAuditLogs(); updateInterfaceStats();
+
+            try {
+                if (BACKEND_API) {
+                    await fetch(BACKEND_API, { method: 'POST', body: JSON.stringify({ action: 'save', asset: assetsData[assetIndex] }) });
+                    const res = await fetch(BACKEND_API, { method: 'POST', body: JSON.stringify({ action: 'toggleCheck', key: id, by: checkerName }) });
+                    if((await res.json()).ok) {
+                        showToast('✅ บันทึกสำเร็จ', `ตรวจนับ "${assetsData[assetIndex].name}" และตั้งสถานะเป็น [${statusChoice}] เรียบร้อย`, 'success');
+                        syncWithGoogleSheets();
+                    }
+                }
+            } catch(e) {
+                showToast('⚠️ เซฟในเครื่องแล้ว', 'เก็บเข้าหน่วยความจำชั่วคราวแล้ว', 'error');
+            }
+        }
+
+        function renderAuditLogs() {
+    const tbody = document.getElementById('audit-logs-tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    // เรียงลำดับประวัติล่าสุดขึ้นก่อน (Descending Order)
+    const sortedLogs = [...auditLogs].sort((a, b) => new Date(b.at) - new Date(a.at));
+    
+    if (sortedLogs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400 italic">
+                    ไม่พบประวัติการเข้าตรวจสอบข้อมูลในระบบ
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = sortedLogs.map(log => {
+        // ดึงวันที่และเวลาตามรูปแบบสากลและเป็นทางการ
+        const dateFormatted = log.at ? new Date(log.at).toLocaleString('th-TH', {
+            day: 'numeric', month: 'short', year: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        }) : '-';
+        
+        // ค้นหาข้อมูลครุภัณฑ์จาก assetsData โดยใช้ ID เพื่อนำมาแสดง รหัส และ ชื่อ ให้ถูกต้อง
+        const asset = assetsData.find(a => a.id === log.id);
+        
+        // กำหนดข้อความแสดงผลหลัก (หากไม่พบข้อมูลในคลัง จะแสดงค่าเริ่มต้นป้องกันระบบผิดพลาด)
+        const assetDisplayInfo = asset 
+            ? `<span class="font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold border border-slate-200 mr-1">${asset.code || 'N/A'}</span> ${asset.name || ''}`
+            : `<span class="text-slate-400 italic text-[11px]">ไม่พบข้อมูลครุภัณฑ์ (ID: ${log.id || 'N/A'})</span>`;
+            
+        return `
+            <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors text-[11px]">
+                <td class="px-4 py-2.5 font-medium text-slate-600">${dateFormatted}</td>
+                <td class="px-4 py-2.5 text-slate-900 font-medium">${assetDisplayInfo}</td>
+                <td class="px-4 py-2.5 text-slate-700">${log.by || 'เจ้าหน้าที่ระบบ'}</td>
+                <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        ${log.status || 'ตรวจสอบแล้ว'}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+        function openCreateModal() {
+            document.getElementById('modal-title').innerHTML = `เพิ่มบันทึกทะเบียนครุภัณฑ์ใหม่`;
+            document.getElementById('form-id').value = ''; document.getElementById('form-code').value = ''; document.getElementById('form-name').value = '';
+            document.getElementById('form-cat').value = ''; document.getElementById('form-room').value = ''; document.getElementById('form-owner').value = '';
+            document.getElementById('form-year').value = new Date().getFullYear() + 543; document.getElementById('form-price').value = '';
+            document.getElementById('form-status').value = 'สภาพดี'; document.getElementById('asset-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const item = assetsData.find(a => a.id === id); if(!item) return;
+            document.getElementById('modal-title').innerHTML = `แก้ไขข้อมูลรายละเอียดครุภัณฑ์`;
+            document.getElementById('form-id').value = item.id; document.getElementById('form-code').value = item.code || '';
+            document.getElementById('form-name').value = item.name || ''; document.getElementById('form-cat').value = item.cat || '';
+            document.getElementById('form-room').value = item.room || ''; document.getElementById('form-owner').value = item.owner || '';
+            document.getElementById('form-year').value = item.year || ''; document.getElementById('form-price').value = item.price || '';
+            document.getElementById('form-status').value = item.status || 'สภาพดี'; document.getElementById('asset-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        async function saveAssetForm() {
+            const code = document.getElementById('form-code').value.trim();
+            const name = document.getElementById('form-name').value.trim();
+            if(!code || !name) { alert('กรุณาระบุข้อมูล รหัสครุภัณฑ์ และชื่อรายการ ให้ครบถ้วน'); return; }
+            const id = document.getElementById('form-id').value || 'asset_' + Math.random().toString(36).substr(2, 9);
+            const assetPayload = {
+                id, code, name, cat: document.getElementById('form-cat').value.trim() || 'ทั่วไป',
+                room: document.getElementById('form-room').value.trim(), owner: document.getElementById('form-owner').value.trim(), 
+                year: document.getElementById('form-year').value, price: document.getElementById('form-price').value, 
+                status: document.getElementById('form-status').value
+            };
+            closeModal('asset-modal'); showToast('⏳ บันทึกข้อมูล', 'ระบบกำลังส่งสัญญาณเซฟข้อมูลขึ้นสู่ Cloud Base', 'info');
+            const idx = assetsData.findIndex(a => a.id === id);
+            if (idx !== -1) assetsData[idx] = assetPayload; else assetsData.push(assetPayload);
+            localStorage.setItem('local_assets', JSON.stringify(assetsData)); renderAssets(); updateInterfaceStats();
+            try {
+                if(BACKEND_API) {
+                    const res = await fetch(BACKEND_API, { method: 'POST', body: JSON.stringify({ action: 'save', asset: assetPayload }) });
+                    if((await res.json()).ok) { showToast('✅ สำเร็จ', 'บันทึกข้อมูลครุภัณฑ์เรียบร้อยแล้ว', 'success'); syncWithGoogleSheets(); }
+                }
+            } catch(e) { showToast('⚠️ บันทึกในเครื่องสแตนด์บาย', 'เก็บข้อมูลเรียบร้อย', 'error'); }
+        }
+
+        async function deleteAssetItem(id) {
+            if(!confirm('คุณแน่ใจใช่หรือไม่ที่จะลบรายการสินทรัพย์นี้อย่างถาวรออกจากระบบคลัง?')) return;
+            showToast('🗑️ ลบข้อมูล', 'กำลังส่งคำสั่งขอลบแถวข้อมูลออกจากคลาวด์สเปซ...', 'info');
+            assetsData = assetsData.filter(a => a.id !== id);
+            localStorage.setItem('local_assets', JSON.stringify(assetsData)); renderAssets(); updateInterfaceStats();
+            try {
+                if(BACKEND_API) {
+                    const res = await fetch(BACKEND_API, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
+                    if((await res.json()).ok) { showToast('✅ ลบสำเร็จ', 'ลบข้อมูลสินทรัพย์เรียบร้อย', 'success'); syncWithGoogleSheets(); }
+                }
+            } catch(e) { showToast('❌ ลบไม่สำเร็จบนคลาวด์', 'เครือข่ายขัดข้อง', 'error'); }
+        }
+
+        function openScannerModal() {
+            document.getElementById('scanner-modal').classList.remove('hidden');
+            document.getElementById('scanner-status').textContent = 'กำลังขอสิทธิ์เข้าถึงโมดูลฮาร์ดแวร์เลนส์กล้อง...';
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    videoStream = stream; const video = document.getElementById('scanner-video');
+                    video.srcObject = stream; video.setAttribute("playsinline", true); video.play();
+                    animationFrameId = requestAnimationFrame(scanTickProgress);
+                    document.getElementById('scanner-status').textContent = '📸 ส่องคิวอาร์โค้ดของแผ่นป้ายเพื่อกรอกผลตรวจ';
+                }).catch(function(err) {
+                    document.getElementById('scanner-status').innerHTML = '<span class="text-rose-500 font-bold">❌ เปิดกล้องล้มเหลว (กรุณาให้สิทธิ์กล้องในเบราว์เซอร์)</span>';
+                });
+        }
+
+        function closeScannerModal() { stopCameraDecoding(); closeModal('scanner-modal'); }
+        function stopCameraDecoding() { if (animationFrameId) cancelAnimationFrame(animationFrameId); if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); } animationFrameId = null; videoStream = null; }
+
+        function scanTickProgress() {
+            const video = document.getElementById('scanner-video');
+            if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement("canvas"); canvas.height = video.videoHeight; canvas.width = video.videoWidth;
+                const ctx = canvas.getContext("2d"); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+                if (code) {
+                    const scannedText = code.data.trim(); let matchedId = scannedText;
+                    if (scannedText.startsWith('{') && scannedText.endsWith('}')) { try { matchedId = JSON.parse(scannedText).id.trim(); } catch (e) {} }
+                    const asset = assetsData.find(a => a.id && matchedId && a.id.toString().trim().toUpperCase() === matchedId.toUpperCase());
+                    if (asset) { 
+                        stopCameraDecoding(); closeModal('scanner-modal'); openManualAuditModal(asset.id); return; 
+                    } else {
+                        stopCameraDecoding(); document.getElementById('scanner-status').innerHTML = `<span class="text-rose-500 font-bold">❌ ไม่พบชุดรหัสรหัส "${matchedId}" ในคลัง</span>`;
+                        setTimeout(() => { if (!document.getElementById('scanner-modal').classList.contains('hidden')) openScannerModal(); }, 2000); return;
+                    }
                 }
             }
-
-            // จัดการสถิติแสดงผลและการแจ้งเตือนเมื่อไม่พบข้อมูล
-            document.getElementById('showing-count').innerText = `แสดงผล ${visibleCount} รายการ`;
-            const noResults = document.getElementById('noResults');
-            if (visibleCount === 0) {
-                noResults.classList.remove('hidden');
-            } else {
-                noResults.classList.add('hidden');
-            }
+            if (videoStream) animationFrameId = requestAnimationFrame(scanTickProgress);
         }
 
-        // 3. ฟังก์ชันคลิกสลับปุ่มตรวจแล้ว (Toggle Audit)
-        function toggleAudit(btn) {
-            const span = btn.querySelector('span');
-            const icon = btn.querySelector('i');
-            
-            if (btn.classList.contains('bg-emerald-600')) {
-                // เปลี่ยนสถานะเป็น รอตรวจสอบ
-                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'text-white', 'shadow-sm');
-                btn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
-                span.innerText = "รอตรวจสอบ";
-                icon.className = "ti ti-square text-sm";
-            } else {
-                // เปลี่ยนสถานะเป็น ตรวจเสร็จแล้ว
-                btn.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
-                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'text-white', 'shadow-sm');
-                span.innerText = "ตรวจแล้ว";
-                icon.className = "ti ti-check text-sm";
-            }
-            
-            // คำนวณสถิติด้านบนใหม่แบบไดนามิก
-            calculateStats();
+        // ป้ายสติกเกอร์พิมพ์แก้บั๊กล้นขอบเรียบร้อยสวยงาม
+        function generateSingleQRLabel(id) {
+            const item = assetsData.find(a => a.id === id); if(!item) return;
+            const printArea = document.getElementById('qr-printable-area');
+            printArea.innerHTML = `
+                <div class="bg-white border-2 border-slate-900 p-4 w-[290px] text-black font-sans flex flex-col gap-2 rounded-xl shadow-sm printable-item overflow-hidden" id="single-tag">
+                    <div class="text-center font-bold text-xs border-b-2 border-slate-900 pb-1.5 uppercase tracking-wide">ป้ายทะเบียนรหัสสินทรัพย์ครุภัณฑ์</div>
+                    <div class="flex items-center gap-3 w-full">
+                        <div id="qrcode-node" class="bg-white p-1 rounded border border-slate-200 flex-shrink-0"></div>
+                        <div class="flex-1 min-w-0 text-[11px] space-y-0.5" style="word-break: break-word; white-space: normal;">
+                            <div class="font-bold font-mono bg-slate-900 text-white px-1.5 py-0.5 rounded text-[10px] w-fit">${item.code || 'N/A'}</div>
+                            <div class="font-bold text-slate-800 mt-1 text-[12px] leading-tight">${item.name || 'N/A'}</div>
+                            <div class="text-slate-500 text-[10px]">หมวด: ${item.cat || 'ทั่วไป'}</div>
+                            <div class="text-slate-500 text-[10px]">ห้อง: ${item.room || '-'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            new QRCode(document.getElementById("qrcode-node"), { text: item.id, width: 85, height: 85, correctLevel: QRCode.CorrectLevel.H });
+            document.getElementById('qr-modal').classList.remove('hidden');
         }
 
-        // 4. ฟังก์ชันคำนวณสรุปผลสถิติแบบเรียลไทม์
-        function calculateStats() {
-            const totalCards = document.getElementsByClassName('asset-card').length;
-            const auditedButtons = document.querySelectorAll('.audit-btn.bg-emerald-600').length;
-            const pendingCount = totalCards - auditedButtons;
+        function openMassPrintModal() {
+    if(selectedAssetIds.length === 0) { 
+        alert('ระบบไม่สามารถดำเนินการได้: กรุณาเลือกรายการครุภัณฑ์ที่ต้องการจัดพิมพ์อย่างน้อย 1 รายการ โดยทำเครื่องหมายที่ช่องสี่เหลี่ยมบนการ์ดแสดงผล'); 
+        return; 
+    }
+    const printArea = document.getElementById('qr-printable-area');
+    printArea.innerHTML = '';
+    
+    // กรองข้อมูลเฉพาะรายการครุภัณฑ์ที่มี ID ตรงกับที่ผู้ใช้เลือก (Bulk Selection)
+    const itemsToPrint = assetsData.filter(a => selectedAssetIds.includes(a.id));
+    
+    itemsToPrint.forEach((item, index) => {
+        const tag = document.createElement('div'); 
+        tag.className = "bg-white border-2 border-slate-900 p-3.5 w-[290px] text-black font-sans flex flex-col gap-2 rounded-xl printable-item overflow-hidden relative";
+        tag.innerHTML = `
+            <div class="text-center font-bold text-xs border-b-2 border-slate-900 pb-1.5 uppercase tracking-wide">ป้ายทะเบียนรหัสสินทรัพย์ครุภัณฑ์</div>
+            <div class="flex items-center gap-3 w-full pb-3">
+                <div id="qrcode-mass-${index}" class="bg-white p-1 rounded border border-slate-200 flex-shrink-0"></div>
+                <div class="flex-1 min-w-0 text-[11px] space-y-0.5" style="word-break: break-word; white-space: normal;">
+                    <div class="font-bold font-mono bg-slate-900 text-white px-1.5 py-0.5 rounded text-[10px] w-fit">${item.code || 'N/A'}</div>
+                    <div class="font-bold text-slate-800 mt-1 text-[12px] leading-tight">${item.name || 'ไม่ระบุข้อมูล'}</div>
+                    <div class="text-slate-500 text-[10px]">หมวดหมู่: ${item.cat || 'ทั่วไป'}</div>
+                    <div class="text-slate-500 text-[10px]">สถานที่/ห้อง: ${item.room || 'ไม่ระบุ'}</div>
+                </div>
+            </div>
+            <div class="absolute bottom-1 right-3 text-[8px] text-slate-400 font-medium italic tracking-wide">
+                พัฒนาระบบโดย: วรท เกษเพ็ชร์
+            </div>
+        `;
+        printArea.appendChild(tag);
+        new QRCode(document.getElementById(`qrcode-mass-${index}`), { text: item.id, width: 85, height: 85, correctLevel: QRCode.CorrectLevel.H });
+    });
+    document.getElementById('qr-modal').classList.remove('hidden');
+}
 
-            document.getElementById('stat-total').innerText = totalCards + " ชิ้น";
-            document.getElementById('stat-audited').innerText = auditedButtons + " ชิ้น";
-            document.getElementById('stat-pending').innerText = pendingCount + " ชิ้น";
+        function printQrLabels() {
+            const htmlContent = document.getElementById('qr-printable-area').innerHTML;
+            const win = window.open('', '_blank', 'width=750,height=600');
+            win.document.write(`
+                <html>
+                <head>
+                    <title>พิมพ์สติกเกอร์ฉลากครุภัณฑ์</title>
+                    <style>
+                        body { margin: 0; padding: 20px; font-family: sans-serif; background: #fff; }
+                        .grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; justify-items: center; }
+                        .printable-item { border: 2px solid #000 !important; padding: 14px !important; width: 290px !important; display: flex !important; flex-direction: column !important; gap: 8px !important; box-sizing: border-box; page-break-inside: avoid; border-radius: 8px; overflow: hidden !important; }
+                        .text-center { text-align: center !important; font-weight: bold !important; border-bottom: 2px solid #000 !important; padding-bottom: 6px !important; font-size: 13px !important; }
+                        .flex { display: flex !important; align-items: center !important; gap: 12px !important; width: 100% !important; }
+                        .flex-shrink-0 { flex-shrink: 0 !important; }
+                        .flex-1 { flex: 1 !important; min-w: 0 !important; }
+                        .font-mono { background: #000 !important; color: #fff !important; padding: 2px 6px !important; border-radius: 4px !important; font-size: 10px !important; width: fit-content !important; font-family: monospace; }
+                        .text-slate-800 { color: #111 !important; font-weight: bold !important; font-size: 12px !important; line-height: 1.3 !important; margin-top: 4px !important; word-break: break-word !important; white-space: normal !important; }
+                        .text-slate-500 { color: #555 !important; font-size: 10px !important; margin-top: 2px !important; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="grid-layout">${htmlContent}</div>
+                </body>
+                </html>
+            `);
+            win.document.close(); win.focus();
+            setTimeout(() => { win.print(); win.close(); }, 800);
         }
+
+        function exportToExcel() {
+            if(assetsData.length === 0) { alert('ไม่มีชุดข้อมูลให้ทำการจัดส่งออก'); return; }
+            const worksheet = XLSX.utils.json_to_sheet(assetsData.map(a => ({ 
+                'id': a.id, 'code': a.code, 'name': a.name, 'cat': a.cat, 'room': a.room, 'owner': a.owner, 'year': a.year, 'price': a.price, 'status': a.status 
+            })));
+            const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "คลังทรัพย์สิน"); XLSX.writeFile(workbook, `ทะเบียนครุภัณฑ์_ระบบองค์กร.xlsx`);
+        }
+
+        function openImportModal() { document.getElementById('excel-file-input').value = ''; document.getElementById('import-modal').classList.remove('hidden'); }
+        
+        function downloadStandardTemplate() {
+            const templateData = [
+                { id: 'เด้งออโต้ทิ้งว่างไว้ได้', code: 'COM-2569-001', name: 'คอมพิวเตอร์ออลอินวัน HP', cat: 'คอมพิวเตอร์', room: 'ห้องปฏิบัติการ 1', owner: 'สมชาย รักดี', year: 2569, price: 24500, status: 'สภาพดี' }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template"); XLSX.writeFile(wb, "แบบฟอร์มนำเข้าครุภัณฑ์มาตรฐาน_เทมเพลต.xlsx");
+        }
+
+        function handleExcelImport() {
+            const file = document.getElementById('excel-file-input').files[0]; if(!file) { alert('กรุณาเลือกไฟล์เอกสารก่อนกดอัปโหลด'); return; }
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    if (rows.length === 0) { alert('ไม่พบแถวข้อมูลใดๆ'); return; }
+                    
+                    const parsed = rows.map(r => ({
+                        id: r.id && String(r.id).trim() !== '' && String(r.id) !== 'เด้งออโต้ทิ้งว่างไว้ได้' ? String(r.id) : 'asset_' + Math.random().toString(36).substr(2, 9),
+                        code: String(r.code || '').trim(), name: String(r.name || 'ไม่ระบุชื่อสิ่งของ').trim(), cat: String(r.cat || 'ทั่วไป').trim(),
+                        room: String(r.room || '').trim(), owner: String(r.owner || '').trim(), year: r.year || '', price: r.price || '', status: r.status || 'สภาพดี'
+                    }));
+
+                    closeModal('import-modal'); showToast('🚀 กำลังบันทึกข้อมูลนำเข้า', 'ระบบกำลังส่งข้อมูลขึ้นเซิร์ฟเวอร์แบบกลุ่ม...', 'info');
+                    const map = new Map(assetsData.map(a => [a.code, a])); parsed.forEach(p => { if(p.code) map.set(p.code, p); }); assetsData = Array.from(map.values());
+                    localStorage.setItem('local_assets', JSON.stringify(assetsData)); renderAssets(); updateInterfaceStats();
+                    if(BACKEND_API) {
+                        const res = await fetch(BACKEND_API, { method: 'POST', body: JSON.stringify({ action: 'bulkSave', assets: parsed }) });
+                        if((await res.json()).ok) { showToast('✅ นำเข้าสำเร็จ', `รวมรวมเข้าคลังครุภัณฑ์ระบบเรียบร้อยแล้ว`, 'success'); syncWithGoogleSheets(); }
+                    }
+                } catch(err) { alert('รูปแบบไฟล์ผิดพลาด กรุณาตรวจสอบหัวคอลัมน์อีกครั้ง'); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearAuditHistory() { if(!confirm('ต้องการล้างบันทึกสถิติประวัติการเข้าตรวจทั้งหมด?')) return; auditLogs = []; localStorage.removeItem('local_audits'); renderAuditLogs(); updateInterfaceStats(); renderAssets(); showToast('🗑️ ล้างล็อกประวัติสำเร็จ', 'ล้างแคชประวัติสะอาดเรียบร้อย', 'success'); }
+    
+        // ฟังก์ชันจัดการเปิด-ปิดการติ๊กเลือกระดับตัวชิ้นงาน
+function toggleSelectAsset(id) {
+    const index = selectedAssetIds.indexOf(id);
+    if (index === -1) {
+        selectedAssetIds.push(id);
+    } else {
+        selectedAssetIds.splice(index, 1);
+    }
+    updateMassPrintButtonUI();
+}
+
+// ฟังก์ชันปุ่มลัด: ติ๊กเลือกทั้งหมดที่กำลังแสดงผลอยู่ในหน้าจอขณะนั้น
+function selectAllDisplayedAssets() {
+    // อิงตามระบบค้นหาและ Filter ปัจจุบัน
+    const currentYear = new Date().getFullYear() + 543;
+    const filtered = assetsData.filter(a => {
+        const matchStatus = filterStatusActive === 'ทั้งหมด' || a.status === filterStatusActive;
+        const hasBeenCheckedThisYear = auditLogs.some(log => log.id === a.id && log.at && (new Date(log.at).getFullYear() + 543) === currentYear);
+        if (searchQuery === 'ตรวจแล้ว') { return matchStatus && hasBeenCheckedThisYear; }
+        if (searchQuery === 'ยังไม่ได้ตรวจ' || searchQuery === 'ยังไม่ตรวจ') { return matchStatus && !hasBeenCheckedThisYear; }
+        return matchStatus && (!searchQuery || 
+            (a.name && a.name.toLowerCase().includes(searchQuery)) ||
+            (a.code && a.code.toLowerCase().includes(searchQuery)) ||
+            (a.room && a.room.toLowerCase().includes(searchQuery)) ||
+            (a.cat && a.cat.toLowerCase().includes(searchQuery)) ||
+            (a.owner && a.owner.toLowerCase().includes(searchQuery)));
+    });
+
+    filtered.forEach(a => {
+        if (!selectedAssetIds.includes(a.id)) {
+            selectedAssetIds.push(a.id);
+        }
+    });
+    renderAssets();
+    updateMassPrintButtonUI();
+}
+
+// ฟังก์ชันปุ่มลัด: ล้างการเลือก checkbox ทั้งหมดทิ้ง
+function clearAllSelectedAssets() {
+    selectedAssetIds = [];
+    renderAssets();
+    updateMassPrintButtonUI();
+}
+
+// ฟังก์ชันอัปเดตข้อความบนปุ่มกดพิมพ์ตามยอดจริง
+function updateMassPrintButtonUI() {
+    // ค้นหาปุ่ม พิมพ์ป้าย QR เดิมในหน้าเว็บ (เราจะแก้ HTML ในขั้นตอนถัดไป)
+    const btn = document.getElementById('btn-mass-print-trigger');
+    if (btn) {
+        if (selectedAssetIds.length > 0) {
+            btn.innerHTML = `<i class="fa-solid fa-print"></i> พิมพ์ป้าย QR ที่เลือก (${selectedAssetIds.length})`;
+            btn.className = "flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-rose-600 text-white hover:bg-rose-700 px-3 py-2 rounded-lg text-[11px] font-bold transition shadow-md animate-pulse";
+        } else {
+            btn.innerHTML = `<i class="fa-solid fa-print"></i> เลือกพิมพ์ป้าย QR`;
+            btn.className = "flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-slate-500 text-white hover:bg-slate-600 px-3 py-2 rounded-lg text-[11px] font-bold transition shadow-sm";
+        }
+    }
+}
+    
     </script>
 </body>
 </html>
