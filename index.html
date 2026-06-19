@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APP ระบบจัดการครุภัณฑ์ - Modern SaaS Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-height-screen text-slate-800">
+
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-500/30 flex items-center justify-center">
+                    <i class="ti ti-box text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide">APP ระบบจัดการครุภัณฑ์</h1>
+                    <p class="text-[10px] text-slate-400 -mt-1">Asset Management System v2.0</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>ซิงค์ Google Sheets สำเร็จ ✓</span>
+                </div>
+                
+                <button class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition duration-200 flex items-center justify-center" title="ออกจากระบบ">
+                    <i class="ti ti-logout text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
+                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <i class="ti ti-box text-8xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ครุภัณฑ์ทั้งหมด</span>
+                    <span class="text-3xl font-bold text-slate-800" id="stat-total">6 ชิ้น</span>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
+                    <i class="ti ti-boxes"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
+                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <i class="ti ti-circle-check text-8xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ตรวจแล้วปีนี้</span>
+                    <span class="text-3xl font-bold text-emerald-600" id="stat-audited">4 ชิ้น</span>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
+                    <i class="ti ti-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
+                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <i class="ti ti-category text-8xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">หมวดหมู่ระบบ</span>
+                    <span class="text-3xl font-bold text-indigo-600">3 หมวด</span>
+                </div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
+                    <i class="ti ti-category"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition duration-300">
+                <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <i class="ti ti-alert-circle text-8xl"></i>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">รอการตรวจสอบ</span>
+                    <span class="text-3xl font-bold text-amber-500" id="stat-pending">2 ชิ้น</span>
+                </div>
+                <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10">
+                    <i class="ti ti-clock-hour-4"></i>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row items-stretch gap-3 flex-1 max-w-2xl">
+                    <div class="relative flex-1">
+                        <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <input type="text" id="searchInput" oninput="filterAssets()" placeholder="พิมพ์ชื่อ, รหัส หรือผู้ดูแล เพื่อค้นหาด่วน..." 
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-200">
+                    </div>
+                    <button class="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-slate-50 transition">
+                        <i class="ti ti-adjustments-horizontal text-lg"></i>
+                        <span>ตัวกรองขั้นสูง</span>
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button onclick="openModal('addModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/10 transition duration-200">
+                        <i class="ti ti-plus text-base"></i>
+                        <span>เพิ่มครุภัณฑ์ใหม่</span>
+                    </button>
+                    <button onclick="openModal('scanModal')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 transition duration-200">
+                        <i class="ti ti-qrcode text-base"></i>
+                        <span>สแกน QR Code</span>
+                    </button>
+                    <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 transition">
+                        <i class="ti ti-file-download text-base"></i>
+                        <span>นำเข้า</span>
+                    </button>
+                    <button class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition">
+                        <i class="ti ti-file-spreadsheet text-base"></i>
+                        <span>ส่งออก Excel</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">รายการครุภัณฑ์ทั้งหมด</h2>
+                <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md" id="showing-count">แสดงผล 6 รายการ</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="assetGrid">
+                
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="Keyboard Dell Latitude" data-code="KB-001" data-owner="วิชัย เก่งมาก">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">คอมพิวเตอร์</span>
+                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">Keyboard Dell Latitude 5420</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">KB-001</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ฝ่ายไอที</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">วิชัย เก่งมาก</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2566</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿35,000</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
+                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="เครื่องปรับอากาศ Mitsubishi" data-code="AC-002" data-owner="สมศักดิ์ มั่นคง">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เครื่องใช้ไฟฟ้า</span>
+                            <span class="status-badge bg-rose-50 text-rose-700 border border-rose-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ชำรุด</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">เครื่องปรับอากาศ Mitsubishi 18000 BTU</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">AC-002</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ห้องผู้อำนวยการ</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">สมศักดิ์ มั่นคง</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2565</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿28,000</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <i class="ti ti-square text-sm"></i> <span>รอตรวจสอบ</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="เก้าอี้สำนักงาน Office Pro" data-code="CHR-005" data-owner="ห้องประชุม">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เฟอร์นิเจอร์</span>
+                            <span class="status-badge bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">รอตรวจ</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">เก้าอี้สำนักงาน Office Pro</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">CHR-005</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ห้องประชุม</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">ไม่ระบุผู้ดูแล</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2564</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿3,200</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <i class="ti ti-square text-sm"></i> <span>รอตรวจสอบ</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โน้ตบุ๊ก HP ProBook" data-code="NB-004" data-owner="กิตติพงษ์ ใจดี">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">คอมพิวเตอร์</span>
+                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โน้ตบุ๊ก HP ProBook 450 G9</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">NB-004</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ฝ่ายบัญชี</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">กิตติพงษ์ ใจดี</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2566</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿29,900</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
+                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โต๊ะทำงานอเนกประสงค์" data-code="TB-012" data-owner="พัสดุกลาง">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เฟอร์นิเจอร์</span>
+                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โต๊ะทำงานอเนกประสงค์ พับได้</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">TB-012</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ห้องอาหารชั้น 2</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">พัสดุกลาง</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2564</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿1,850</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
+                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition duration-300" data-name="โปรเจคเตอร์ Epson" data-code="PJ-009" data-owner="สมชาย รักเรียน">
+                    <div class="p-5 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">เครื่องใช้ไฟฟ้า</span>
+                            <span class="status-badge bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full">ดี</span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">โปรเจคเตอร์ Epson EB-X06</h3>
+                        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">PJ-009</span></p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-map-pin text-slate-400 text-base"></i>
+                                <span class="truncate">ห้องประชุมใหญ่</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-user text-slate-400 text-base"></i>
+                                <span class="truncate">สมชาย รักเรียน</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-calendar text-slate-400 text-base"></i>
+                                <span>ปีงบฯ 2565</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="ti ti-coin text-slate-400 text-base"></i>
+                                <span class="font-semibold text-slate-700">฿19,500</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button onclick="toggleAudit(this)" class="audit-btn text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition">
+                            <i class="ti ti-check text-sm"></i> <span>ตรวจแล้ว</span>
+                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข">
+                                <i class="ti ti-edit text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="ป้าย QR">
+                                <i class="ti ti-qrcode text-base"></i>
+                            </button>
+                            <button class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบรายการ">
+                                <i class="ti ti-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div id="noResults" class="hidden bg-white rounded-2xl border border-slate-100 p-12 shadow-sm text-center">
+                <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="ti ti-search-off"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-700">ไม่พบข้อมูลครุภัณฑ์ที่ค้นหา</h3>
+                <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองข้อมูล</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="addModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="ti ti-circle-plus text-xl text-blue-400"></i>
+                    <h3 class="font-bold">เพิ่มรายการครุภัณฑ์ใหม่</h3>
+                </div>
+                <button onclick="closeModal('addModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+            </div>
+            <div class="p-5 grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่อครุภัณฑ์ *</label>
+                    <input type="text" placeholder="ระบุชื่อสิ่งของ เช่น โน้ตบุ๊ก Dell" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">รหัสครุภัณฑ์ *</label>
+                    <input type="text" placeholder="เช่น NB-005" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">หมวดหมู่ *</label>
+                    <select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>คอมพิวเตอร์</option>
+                        <option>เครื่องใช้ไฟฟ้า</option>
+                        <option>เฟอร์นิเจอร์</option>
+                        <option>อื่นๆ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">ปีงบประมาณ</label>
+                    <input type="number" placeholder="2569" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">ราคาทุน (บาท)</label>
+                    <input type="number" placeholder="0.00" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">แผนก/สถานที่จัดวาง</label>
+                    <input type="text" placeholder="เช่น ฝ่ายไอที ชั้น 3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">ผู้รับผิดชอบดูแล</label>
+                    <input type="text" placeholder="ชื่อ-นามสกุล" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="bg-slate-50 px-5 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button onclick="closeModal('addModal')" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">ยกเลิก</button>
+                <button onclick="alert('จำลอง: บันทึกข้อมูลสำเร็จค้บ!'); closeModal('addModal');" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/10 transition">บันทึกรายการ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scanModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="ti ti-camera text-xl text-amber-400"></i>
+                    <h3 class="font-bold">สแกนตรวจสอบด้วย QR</h3>
+                </div>
+                <button onclick="closeModal('scanModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+            </div>
+            <div class="p-6 text-center">
+                <div class="w-full aspect-square bg-slate-950 rounded-2xl relative overflow-hidden flex flex-col items-center justify-center border-2 border-slate-800 shadow-inner">
+                    <div class="absolute w-full h-0.5 bg-red-500 top-0 left-0 shadow-lg shadow-red-500 animate-[bounce_2s_infinite]"></div>
+                    
+                    <div class="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-amber-400 rounded-tl-sm"></div>
+                    <div class="absolute top-4 right-4 w-6 h-6 border-t-4 border-r-4 border-amber-400 rounded-tr-sm"></div>
+                    <div class="absolute bottom-4 left-4 w-6 h-6 border-b-4 border-l-4 border-amber-400 rounded-bl-sm"></div>
+                    <div class="absolute bottom-4 right-4 w-6 h-6 border-b-4 border-r-4 border-amber-400 rounded-br-sm"></div>
+                    
+                    <i class="ti ti-qrcode text-6xl text-slate-700 animate-pulse"></i>
+                    <p class="text-xs text-slate-500 mt-2 font-medium px-4">กำลังเปิดกล้องระบบสแกนอัตโนมัติ...</p>
+                </div>
+                <p class="text-xs text-slate-400 mt-4">กรุณานำกล้องไปส่องที่ป้ายสติกเกอร์ QR Code บนตัววัตถุ</p>
+            </div>
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 text-center">
+                <button onclick="closeModal('scanModal')" class="w-full py-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // 1. ฟังก์ชันเปิด-ปิด Modal ป๊อปอัป
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // 2. ฟังก์ชันระบบค้นหาด่วนแบบ Realtime
+        function filterAssets() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.getElementsByClassName('asset-card');
+            let visibleCount = 0;
+
+            for (let i = 0; i < cards.length; i++) {
+                const name = cards[i].getAttribute('data-name').toLowerCase();
+                const code = cards[i].getAttribute('data-code').toLowerCase();
+                const owner = cards[i].getAttribute('data-owner').toLowerCase();
+
+                if (name.includes(input) || code.includes(input) || owner.includes(input)) {
+                    cards[i].style.display = "flex";
+                    visibleCount++;
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+
+            // จัดการสถิติแสดงผลและการแจ้งเตือนเมื่อไม่พบข้อมูล
+            document.getElementById('showing-count').innerText = `แสดงผล ${visibleCount} รายการ`;
+            const noResults = document.getElementById('noResults');
+            if (visibleCount === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        // 3. ฟังก์ชันคลิกสลับปุ่มตรวจแล้ว (Toggle Audit)
+        function toggleAudit(btn) {
+            const span = btn.querySelector('span');
+            const icon = btn.querySelector('i');
+            
+            if (btn.classList.contains('bg-emerald-600')) {
+                // เปลี่ยนสถานะเป็น รอตรวจสอบ
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                span.innerText = "รอตรวจสอบ";
+                icon.className = "ti ti-square text-sm";
+            } else {
+                // เปลี่ยนสถานะเป็น ตรวจเสร็จแล้ว
+                btn.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'text-white', 'shadow-sm');
+                span.innerText = "ตรวจแล้ว";
+                icon.className = "ti ti-check text-sm";
+            }
+            
+            // คำนวณสถิติด้านบนใหม่แบบไดนามิก
+            calculateStats();
+        }
+
+        // 4. ฟังก์ชันคำนวณสรุปผลสถิติแบบเรียลไทม์
+        function calculateStats() {
+            const totalCards = document.getElementsByClassName('asset-card').length;
+            const auditedButtons = document.querySelectorAll('.audit-btn.bg-emerald-600').length;
+            const pendingCount = totalCards - auditedButtons;
+
+            document.getElementById('stat-total').innerText = totalCards + " ชิ้น";
+            document.getElementById('stat-audited').innerText = auditedButtons + " ชิ้น";
+            document.getElementById('stat-pending').innerText = pendingCount + " ชิ้น";
+        }
+    </script>
+</body>
+</html>
