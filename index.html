@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>ทะเบียนครุภัณฑ์</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -514,6 +517,18 @@ async function removeAsset(id){
   try{await apip({action:'delete',id});setSyncState('ok');toast('ลบสำเร็จ ✓');}catch(e){setSyncState('err');toast('ลบในเครื่องแล้ว');}
 }
 
+function whenQRCodeReady(onReady,onFail){
+  let n=0;
+  const tick=()=>{
+    if(window.QRCode){onReady();return;}
+    if(++n>=20){if(onFail)onFail();return;}
+    setTimeout(tick,100);
+  };
+  tick();
+}
+function qrPayload(a){return JSON.stringify({id:a.id,code:a.code});}
+const QR_OVERFLOW_MSG='ไม่สามารถสร้าง QR Code ได้ (ข้อมูลยาวเกินไป)';
+
 function openDetail(id){
   const a=assets.find(x=>x.id===id);if(!a)return;
   const ck=checks[a.id+'_'+curY];
@@ -545,7 +560,16 @@ function openDetail(id){
       <button onclick="closeModal('detailModal')" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">ปิด</button>
     </div>`;
   document.getElementById('detailModal').classList.remove('hidden-modal');
-  setTimeout(()=>{const el=document.getElementById('qrd');if(el&&window.QRCode){el.innerHTML='';new QRCode(el,{text:JSON.stringify({id:a.id,code:a.code,name:a.name,dept:a.dept||'',status:a.status}),width:160,height:160,correctLevel:QRCode.CorrectLevel.M});}},100);
+  whenQRCodeReady(()=>{
+    const el=document.getElementById('qrd');
+    if(!el)return;
+    el.innerHTML='';
+    try{new QRCode(el,{text:qrPayload(a),width:160,height:160,correctLevel:QRCode.CorrectLevel.M});}
+    catch(e){el.innerHTML=`<p class="text-xs text-slate-400 text-center py-4">${QR_OVERFLOW_MSG}</p>`;}
+  },()=>{
+    const el=document.getElementById('qrd');
+    if(el)el.innerHTML='<p class="text-xs text-slate-400 text-center py-4">ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่</p>';
+  });
 }
 function openQRModal(id){
   const a=assets.find(x=>x.id===id);if(!a)return;
@@ -558,30 +582,57 @@ function openQRModal(id){
       <button onclick="downloadQR('${a.id}')" class="py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-download"></i>บันทึกรูป</button>
     </div>`;
   document.getElementById('scanModal').classList.remove('hidden-modal');
-  setTimeout(()=>{const el=document.getElementById('qrModalQR');if(el&&window.QRCode){el.innerHTML='';new QRCode(el,{text:JSON.stringify({id:a.id,code:a.code,name:a.name,dept:a.dept||'',status:a.status}),width:160,height:160,correctLevel:QRCode.CorrectLevel.M});}},100);
+  whenQRCodeReady(()=>{
+    const el=document.getElementById('qrModalQR');
+    if(!el)return;
+    el.innerHTML='';
+    try{new QRCode(el,{text:qrPayload(a),width:160,height:160,correctLevel:QRCode.CorrectLevel.M});}
+    catch(e){el.innerHTML=`<p class="text-xs text-slate-400 text-center py-4">${QR_OVERFLOW_MSG}</p>`;}
+  },()=>{
+    const el=document.getElementById('qrModalQR');
+    if(el)el.innerHTML='<p class="text-xs text-slate-400 text-center py-4">ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่</p>';
+  });
 }
 function closeModal(id){document.getElementById(id).classList.add('hidden-modal');}
 
 function printQR(id){
   const a=assets.find(x=>x.id===id);if(!a)return;
-  const tmp=document.createElement('div');tmp.style.display='none';document.body.appendChild(tmp);
-  new QRCode(tmp,{text:JSON.stringify({id:a.id,code:a.code,name:a.name,dept:a.dept||'',status:a.status}),width:240,height:240,correctLevel:QRCode.CorrectLevel.M});
-  setTimeout(()=>{
-    const img=tmp.querySelector('img')?tmp.querySelector('img').src:(tmp.querySelector('canvas')?tmp.querySelector('canvas').toDataURL():'');
-    const w=window.open('','_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR ${a.code}</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:30px}.label{border:2px solid #1e3a8a;border-radius:12px;padding:20px;display:inline-block}h2{font-size:16px;margin-bottom:4px;color:#0f172a}p{font-size:12px;color:#666;margin-bottom:14px}img{width:200px;height:200px}.code{font-size:14px;font-weight:600;margin-top:10px;color:#1e3a8a;letter-spacing:1px}</style></head><body><div class="label"><h2>${a.name||''}</h2><p>${a.dept||''}${a.dept?' · ':''}ทะเบียนครุภัณฑ์</p><img src="${img}"><div class="code">${a.code||''}</div></div></body></html>`);
-    w.document.close();setTimeout(()=>{w.print();document.body.removeChild(tmp);},400);
-  },150);
+  whenQRCodeReady(()=>{
+    const tmp=document.createElement('div');tmp.style.display='none';document.body.appendChild(tmp);
+    try{
+      new QRCode(tmp,{text:qrPayload(a),width:240,height:240,correctLevel:QRCode.CorrectLevel.M});
+      setTimeout(()=>{
+        const img=tmp.querySelector('img')?tmp.querySelector('img').src:(tmp.querySelector('canvas')?tmp.querySelector('canvas').toDataURL():'');
+        const w=window.open('','_blank');
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR ${a.code}</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:30px}.label{border:2px solid #1e3a8a;border-radius:12px;padding:20px;display:inline-block}h2{font-size:16px;margin-bottom:4px;color:#0f172a}p{font-size:12px;color:#666;margin-bottom:14px}img{width:200px;height:200px}.code{font-size:14px;font-weight:600;margin-top:10px;color:#1e3a8a;letter-spacing:1px}.credit{font-size:10px;color:#94a3b8;margin-top:12px}</style></head><body><div class="label"><h2>${a.name||''}</h2><p>${a.dept||''}${a.dept?' · ':''}ทะเบียนครุภัณฑ์</p><img src="${img}"><div class="code">${a.code||''}</div><div class="credit">พัฒนาโดย วรท เกษเพ็ชร์</div></div></body></html>`);
+        w.document.close();setTimeout(()=>{w.print();document.body.removeChild(tmp);},400);
+      },150);
+    }catch(e){document.body.removeChild(tmp);toast(QR_OVERFLOW_MSG);}
+  },()=>toast('ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่'));
 }
 function downloadQR(id){
   const a=assets.find(x=>x.id===id);if(!a)return;
-  const tmp=document.createElement('div');tmp.style.display='none';document.body.appendChild(tmp);
-  new QRCode(tmp,{text:JSON.stringify({id:a.id,code:a.code,name:a.name,dept:a.dept||'',status:a.status}),width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
-  setTimeout(()=>{
-    const canvas=tmp.querySelector('canvas');
-    if(canvas){const link=document.createElement('a');link.download='QR_'+(a.code||a.id)+'.png';link.href=canvas.toDataURL();link.click();}
-    document.body.removeChild(tmp);toast('บันทึก QR Code สำเร็จ');
-  },150);
+  whenQRCodeReady(()=>{
+    const tmp=document.createElement('div');tmp.style.display='none';document.body.appendChild(tmp);
+    try{
+      new QRCode(tmp,{text:qrPayload(a),width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
+      setTimeout(()=>{
+        const canvas=tmp.querySelector('canvas');
+        if(canvas){
+          const creditH=30;
+          const out=document.createElement('canvas');
+          out.width=canvas.width;out.height=canvas.height+creditH;
+          const ctx=out.getContext('2d');
+          ctx.fillStyle='#ffffff';ctx.fillRect(0,0,out.width,out.height);
+          ctx.drawImage(canvas,0,0);
+          ctx.fillStyle='#94a3b8';ctx.font='10px "Noto Sans Thai",system-ui,sans-serif';ctx.textAlign='center';
+          ctx.fillText('พัฒนาโดย วรท เกษเพ็ชร์',out.width/2,canvas.height+20);
+          const link=document.createElement('a');link.download='QR_'+(a.code||a.id)+'.png';link.href=out.toDataURL();link.click();
+        }
+        document.body.removeChild(tmp);toast('บันทึก QR Code สำเร็จ');
+      },150);
+    }catch(e){document.body.removeChild(tmp);toast(QR_OVERFLOW_MSG);}
+  },()=>toast('ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่'));
 }
 
 // ---- ตรวจนับ ----
