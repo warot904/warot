@@ -134,7 +134,13 @@ body{font-family:'Noto Sans Thai',sans-serif}
           <button onclick="openImport()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition"><i class="ti ti-upload"></i><span>นำเข้า</span></button>
           <button onclick="exportXL()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-spreadsheet"></i><span>Excel</span></button>
           <button onclick="exportPDF()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-type-pdf"></i><span>PDF</span></button>
+          <button id="qrModeBtn" onclick="toggleQrSelectMode()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-checkbox"></i><span>เลือกพิมพ์ QR</span></button>
         </div>
+      </div>
+      <div id="qrPrintBar" class="hidden mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2">
+        <button onclick="selectAllVisibleQR()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"><i class="ti ti-checks"></i> เลือกทั้งหมดที่แสดง</button>
+        <button onclick="clearQrSelect()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"><i class="ti ti-x"></i> ล้างการเลือก</button>
+        <button id="qrBulkPrintBtn" onclick="printBulkQR()" disabled class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"><i class="ti ti-printer"></i> พิมพ์ QR ที่เลือก (0 รายการ)</button>
       </div>
       <div class="flex gap-2 mt-4 overflow-x-auto custom-scrollbar pb-1" id="catChips"></div>
     </section>
@@ -292,6 +298,7 @@ body{font-family:'Noto Sans Thai',sans-serif}
 <script>
 const API='https://script.google.com/macros/s/AKfycbzkDqXHBEbTMXKxbFwYgCkTMPE92i0W0zO0UZRYGOCSyrh8W4n8ZZmIV0rlNq0hIEdB/exec';
 let assets=[],checks={},categories=[],filt='all',curY=new Date().getFullYear()+543,editId=null,scanStream=null,scanInt=null,busy=false,scanMode='lookup',pendingImportRows=[];
+let qrSelMode=false,qrSelected=new Set();
 let currentView='list';
 
 const TAB_COLORS={list:'bg-blue-600 text-white',check:'bg-blue-600 text-white',scan:'bg-blue-600 text-white',report:'bg-blue-600 text-white'};
@@ -414,13 +421,42 @@ function statusBadgeClass(status){
 }
 function statusLabel(status){return status==='ดี'?'ดี':status==='ชำรุด'?'ชำรุด':'รอตรวจ';}
 
-function renderList(){
+function getFilteredAssets(){
   const q=(document.getElementById('q').value||'').toLowerCase();
-  const data=assets.filter(a=>{
+  return assets.filter(a=>{
     if(filt==='ดี'||filt==='ชำรุด'||filt==='รอตรวจ'){if(a.status!==filt)return false;}
     if(q&&![(a.name||''),(a.code||''),(a.dept||''),(a.owner||''),(a.cat||'')].some(v=>v.toLowerCase().includes(q)))return false;
     return true;
   });
+}
+function handleCardClick(id){if(qrSelMode)toggleQrSelect(id);else openDetail(id);}
+function toggleQrSelectMode(){
+  qrSelMode=!qrSelMode;
+  if(!qrSelMode)qrSelected.clear();
+  const btn=document.getElementById('qrModeBtn');
+  if(btn){
+    btn.innerHTML=qrSelMode?'<i class="ti ti-x"></i><span>ยกเลิกโหมดเลือก</span>':'<i class="ti ti-checkbox"></i><span>เลือกพิมพ์ QR</span>';
+    btn.className=qrSelMode?'bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-md transition':'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition';
+  }
+  document.getElementById('qrPrintBar').classList.toggle('hidden',!qrSelMode);
+  updateQrPrintBar();renderList();
+}
+function toggleQrSelect(id){
+  if(qrSelected.has(id))qrSelected.delete(id);else qrSelected.add(id);
+  updateQrPrintBar();renderList();
+}
+function selectAllVisibleQR(){getFilteredAssets().forEach(a=>qrSelected.add(a.id));updateQrPrintBar();renderList();}
+function clearQrSelect(){qrSelected.clear();updateQrPrintBar();renderList();}
+function updateQrPrintBar(){
+  const btn=document.getElementById('qrBulkPrintBtn');
+  if(!btn)return;
+  const n=qrSelected.size;
+  btn.textContent='พิมพ์ QR ที่เลือก ('+n+' รายการ)';
+  btn.disabled=n===0;
+}
+
+function renderList(){
+  const data=getFilteredAssets();
   document.getElementById('showingCount').textContent='แสดงผล '+data.length+' รายการ';
   const grid=document.getElementById('assetGrid');
   if(!assets.length){
@@ -442,8 +478,10 @@ function renderList(){
   }
   grid.innerHTML=data.map(a=>{
     const isChecked=!!checks[a.id+'_'+curY];
-    return `<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-slate-200/80 transition">
-      <div class="p-5 flex-1 cursor-pointer" onclick="openDetail('${a.id}')">
+    const isSel=qrSelected.has(a.id);
+    return `<div class="bg-white rounded-2xl border ${isSel?'border-blue-400 ring-2 ring-blue-100':'border-slate-100'} shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
+      ${qrSelMode?`<label class="flex items-center gap-2 px-5 pt-4 cursor-pointer" onclick="event.stopPropagation()"><input type="checkbox" ${isSel?'checked':''} onchange="toggleQrSelect('${a.id}')" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="text-xs font-semibold text-blue-600">เลือกพิมพ์ QR</span></label>`:''}
+      <div class="p-5 flex-1 cursor-pointer ${qrSelMode?'pt-2':''}" onclick="handleCardClick('${a.id}')">
         <div class="flex items-start justify-between gap-2">
           <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">${a.cat||'อื่นๆ'}</span>
           <span class="${statusBadgeClass(a.status)} text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">${statusLabel(a.status)}</span>
@@ -457,7 +495,7 @@ function renderList(){
           <div class="flex items-center gap-2"><i class="ti ti-coin text-slate-400"></i><span class="font-semibold text-slate-700">${a.price?'฿'+Number(a.price).toLocaleString():'–'}</span></div>
         </div>
       </div>
-      <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
+      <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2" onclick="event.stopPropagation()">
         <button onclick="toggleCheck('${a.id}')" class="text-xs font-bold ${isChecked?'bg-emerald-600 hover:bg-emerald-700 text-white':'bg-slate-200 text-slate-700 hover:bg-slate-300'} px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
           <i class="ti ${isChecked?'ti-check':'ti-square'} text-sm"></i><span>${isChecked?'ตรวจแล้ว':'รอตรวจสอบ'}</span>
         </button>
@@ -647,6 +685,53 @@ function downloadQR(id){
     }catch(e){document.body.removeChild(tmp);toast(QR_OVERFLOW_MSG);}
   },()=>toast('ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่'));
 }
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function openBulkPrintWindow(stickers){
+  const PER_PAGE=6;
+  const pages=[];
+  for(let i=0;i<stickers.length;i+=PER_PAGE)pages.push(stickers.slice(i,i+PER_PAGE));
+  const pageHtml=pages.map(pg=>`<div class="page">${pg.map(s=>`<div class="sticker"><img src="${s.img}"><div class="name">${escHtml(s.a.name)}</div><div class="code">${escHtml(s.a.code)}</div><div class="credit">พัฒนาโดย วรท เกษเพ็ชร์</div></div>`).join('')}</div>`).join('');
+  const w=window.open('','_blank');
+  if(!w){toast('กรุณาอนุญาต Popup ก่อน');return;}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>พิมพ์ QR หลายรายการ</title><style>
+@page{size:A4 portrait;margin:8mm}*{box-sizing:border-box}body{font-family:system-ui,'Noto Sans Thai',sans-serif;margin:0}
+.page{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:4mm;page-break-after:always;height:281mm;padding:0}
+.page:last-child{page-break-after:auto}
+.sticker{border:2px dashed #94a3b8;border-radius:6px;padding:2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;height:91mm}
+.sticker img{width:190px;height:190px}.sticker .name{font-size:9px;font-weight:600;color:#0f172a;margin-top:1.5mm;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+.sticker .code{font-size:10px;font-weight:700;color:#1e3a8a;margin-top:1mm;letter-spacing:.5px}.sticker .credit{font-size:7px;color:#94a3b8;margin-top:1.5mm}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>${pageHtml}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+function printBulkQR(){
+  if(!qrSelected.size){toast('กรุณาเลือกครุภัณฑ์อย่างน้อย 1 รายการ');return;}
+  const items=[...qrSelected].map(id=>assets.find(x=>x.id===id)).filter(Boolean);
+  whenQRCodeReady(()=>{
+    toast('กำลังสร้าง QR...',2000);
+    const stickers=[];let failed=0,idx=0;
+    function next(){
+      if(idx>=items.length){
+        if(!stickers.length){toast('ไม่สามารถสร้าง QR ได้');return;}
+        openBulkPrintWindow(stickers);
+        toast('สร้าง QR สำเร็จ '+stickers.length+' ใบ'+(failed?' (ข้าม '+failed+' ใบ)':''));
+        return;
+      }
+      const a=items[idx++],tmp=document.createElement('div');
+      tmp.style.display='none';document.body.appendChild(tmp);
+      try{
+        new QRCode(tmp,{text:qrPayload(a),width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+        setTimeout(()=>{
+          const img=tmp.querySelector('img')?tmp.querySelector('img').src:(tmp.querySelector('canvas')?tmp.querySelector('canvas').toDataURL():'');
+          document.body.removeChild(tmp);
+          if(img)stickers.push({a,img});else failed++;
+          next();
+        },80);
+      }catch(e){document.body.removeChild(tmp);failed++;next();}
+    }
+    next();
+  },()=>toast('ไม่สามารถโหลด QR Code ได้ กรุณาลองใหม่'));
+}
 
 // ---- ตรวจนับ ----
 function renderCheck(){
@@ -710,6 +795,33 @@ function stopScan(){
   document.getElementById('scanWrap').classList.add('hidden');
   document.getElementById('scanHint').textContent='นำ QR Code เข้ากรอบเพื่อดึงข้อมูลครุภัณฑ์';
 }
+function renderScanResult(a){
+  const isC=!!checks[a.id+'_'+curY];
+  const lookup=scanMode!=='check';
+  document.getElementById('scanHint').textContent=isC?'ตรวจนับแล้ว — กดสแกนชิ้นถัดไป':'พบครุภัณฑ์ — กดติ๊กเมื่อตรวจเสร็จ';
+  const checkBlock=isC
+    ?`<div class="bg-emerald-50 text-emerald-700 rounded-xl p-3.5 text-sm text-center font-semibold mb-2">✓ ตรวจนับแล้ว ปี ${curY}</div>
+       <button onclick="scanToggleCheck('${a.id}')" class="w-full py-3 mb-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold active:bg-slate-200">ยกเลิกการตรวจ</button>`
+    :`<button onclick="scanToggleCheck('${a.id}')" class="w-full py-4 mb-3 bg-emerald-600 active:bg-emerald-800 text-white rounded-xl text-base font-bold shadow-md flex items-center justify-center gap-2"><i class="ti ti-circle-check text-xl"></i>✓ ติ๊กว่าตรวจนับแล้ว</button>`;
+  const lookupDetail=lookup?`<div class="text-xs space-y-1 mb-3">
+          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">แผนก</span><span class="font-semibold">${a.dept||'–'}</span></div>
+          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ผู้รับผิดชอบ</span><span class="font-semibold">${a.owner||'–'}</span></div>
+          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ตรวจนับ ${curY}</span><span class="font-semibold ${isC?'text-emerald-600':'text-rose-600'}">${isC?'✓ ตรวจแล้ว':'✗ ยังไม่ตรวจ'}</span></div>
+          <div class="flex justify-between py-1"><span class="text-slate-400">ราคา</span><span class="font-semibold">${a.price?Number(a.price).toLocaleString()+' บาท':'–'}</span></div>
+        </div>`:'';
+  const lookupBtn=lookup?`<button onclick="openDetail('${a.id}');switchView('list')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold mb-2">ดูข้อมูลเต็ม / แก้ไข</button>`:'';
+  document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="ti ${catIcon(a.cat)}"></i></div><div class="flex-1 min-w-0"><div class="font-semibold text-slate-800">${a.name||''}</div><div class="text-xs text-slate-400">${a.code||''}${lookup?'':' · '+(a.dept||'–')}</div></div>${lookup?`<span class="${statusBadgeClass(a.status)} text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">${statusLabel(a.status)}</span>`:''}</div>
+    ${lookupDetail}
+    ${checkBlock}
+    <button onclick="startScan()" class="w-full py-3.5 bg-blue-600 active:bg-blue-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-qrcode"></i>สแกนชิ้นถัดไป</button>
+    ${lookupBtn}</div>`;
+}
+async function scanToggleCheck(id){
+  await toggleCheck(id);
+  const a=assets.find(x=>x.id===id);
+  if(a)renderScanResult(a);
+}
 function processScan(data){
   stopScan();
   try{
@@ -719,29 +831,7 @@ function processScan(data){
       document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 text-center"><p class="text-rose-600 text-sm mb-3">ไม่พบ QR Code นี้ในฐานข้อมูล</p><button onclick="document.getElementById('scanResult').innerHTML=''" class="px-4 py-2 bg-slate-100 rounded-xl text-sm font-semibold">ปิด</button></div>`;
       return;
     }
-    if(scanMode==='check'){
-      const key=a.id+'_'+curY;const already=!!checks[key];
-      if(!already){checks[key]={by:'ผู้ใช้ (สแกน QR)',at:new Date().toISOString()};localStorage.setItem('cb',JSON.stringify(checks));updateStats();checkNotif();apip({action:'toggleCheck',key,remove:false,by:'ผู้ใช้ (สแกน QR)',at:new Date().toISOString()}).then(()=>setSyncState('ok')).catch(()=>setSyncState('err'));}
-      document.getElementById('scanHint').textContent=already?'รายการนี้ตรวจแล้ว':'บันทึกตรวจนับสำเร็จ ✓';
-      document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-        <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="ti ${catIcon(a.cat)}"></i></div><div><div class="font-semibold text-slate-800">${a.name||''}</div><div class="text-xs text-slate-400">${a.code||''} · ${a.dept||'–'}</div></div></div>
-        <div class="${already?'bg-amber-50 text-amber-800':'bg-emerald-50 text-emerald-700'} rounded-xl p-3 text-sm text-center font-semibold mb-3">${already?'รายการนี้ถูกตรวจนับไปแล้ว':'✓ ตรวจนับสำเร็จ ปี '+curY}</div>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="document.getElementById('scanResult').innerHTML='';startScan()" class="py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold">สแกนต่อไป</button>
-          <button onclick="document.getElementById('scanResult').innerHTML=''" class="py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">ปิด</button>
-        </div></div>`;
-    }else{
-      document.getElementById('scanHint').textContent='พบครุภัณฑ์ในระบบ';
-      document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-        <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="ti ${catIcon(a.cat)}"></i></div><div class="flex-1 min-w-0"><div class="font-semibold text-slate-800">${a.name||''}</div><div class="text-xs text-slate-400">${a.code||''}</div></div><span class="${statusBadgeClass(a.status)} text-xs font-bold px-2 py-0.5 rounded-full">${statusLabel(a.status)}</span></div>
-        <div class="text-xs space-y-1 mb-3">
-          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">แผนก</span><span class="font-semibold">${a.dept||'–'}</span></div>
-          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ผู้รับผิดชอบ</span><span class="font-semibold">${a.owner||'–'}</span></div>
-          <div class="flex justify-between py-1"><span class="text-slate-400">ราคา</span><span class="font-semibold">${a.price?Number(a.price).toLocaleString()+' บาท':'–'}</span></div>
-        </div>
-        <button onclick="openDetail('${a.id}');switchView('list')" class="w-full py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold mb-2">ดูข้อมูลเต็ม / แก้ไข</button>
-        <button onclick="document.getElementById('scanResult').innerHTML=''" class="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">สแกนใหม่</button></div>`;
-    }
+    renderScanResult(a);
   }catch(e){document.getElementById('scanHint').textContent='QR Code นี้ไม่ใช่ข้อมูลครุภัณฑ์';}
 }
 
