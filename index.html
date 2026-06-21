@@ -8,6 +8,17 @@
 <meta http-equiv="Expires" content="0">
 <title>ทะเบียนครุภัณฑ์</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{
+  primary:{DEFAULT:'#1B5E42',dark:'#0F3D2E',light:'#2A7A58'},
+  accent:{DEFAULT:'#C9A962',dark:'#B8985A'},
+  cream:{DEFAULT:'#FAF8F3',card:'#FFFDF8',input:'#F5F0E6',line:'#E8E4DC',wm:'#F0EBE3'},
+  heading:'#1A2E24',muted:'#5C6B63',
+  good:{bg:'#E8F3EC',DEFAULT:'#1B5E42',ring:'#C8DDD0'},
+  brick:{bg:'#FDF1EE',DEFAULT:'#9B4434',ring:'#E8C4BC'},
+  gold:{bg:'#FBF3E3',DEFAULT:'#92691B',ring:'#E8D5B0'}
+}}}};
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -29,56 +40,81 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
+:root{--primary-dark:#0F3D2E;--primary:#1B5E42;--primary-light:#2A7A58;--accent:#C9A962;--accent-dark:#B8985A;--cream:#FAF8F3;--card:#FFFDF8}
 body{font-family:'Noto Sans Thai',sans-serif}
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
-.custom-scrollbar::-webkit-scrollbar-track{background:#f1f5f9}
-.custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+.custom-scrollbar::-webkit-scrollbar-track{background:#F0EBE3}
+.custom-scrollbar::-webkit-scrollbar-thumb{background:#C4BDB0;border-radius:4px}
 .hidden-modal{display:none!important}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;max-width:92vw;text-align:center}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F3D2E;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity .35s ease;white-space:nowrap;pointer-events:none;max-width:92vw;text-align:center;box-shadow:0 4px 16px rgba(15,61,46,.25)}
 .toast.show{opacity:1}
-.spinner{width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}
+.shadow-soft{box-shadow:0 1px 2px rgba(15,61,46,.04),0 4px 8px rgba(15,61,46,.06),0 12px 24px rgba(15,61,46,.04)}
+.shadow-soft-lg{box-shadow:0 2px 4px rgba(15,61,46,.05),0 10px 24px rgba(15,61,46,.08),0 28px 48px rgba(15,61,46,.06)}
+.shadow-soft-rc{box-shadow:0 2px 6px rgba(15,61,46,.14),0 10px 24px rgba(15,61,46,.12)}
+.shadow-soft-hover{transition:box-shadow .22s ease,transform .22s ease}
+.shadow-soft-hover:hover{box-shadow:0 2px 4px rgba(15,61,46,.05),0 8px 18px rgba(15,61,46,.09),0 22px 36px rgba(15,61,46,.07);transform:translateY(-2px)}
+.hs{border-top:2px solid var(--accent)}
+.ccard{border:1px solid #E8E4DC}
+.rc{position:relative}
+.acard{cursor:pointer}
+.btn-gold{border:1px solid rgba(201,169,98,.55)!important}
+.tab-on{box-shadow:0 1px 2px rgba(15,61,46,.06),0 4px 10px rgba(15,61,46,.08),inset 0 -2px 0 var(--accent)}
+.empty{text-align:center;animation:fadeIn .4s ease-out}
+.empty-icon{width:5rem;height:5rem;margin:0 auto 1rem;border-radius:1.25rem;background:linear-gradient(145deg,#E8F3EC,#F5F0E6);display:flex;align-items:center;justify-content:center;font-size:2.75rem;color:rgba(27,94,66,.42);box-shadow:0 4px 12px rgba(15,61,46,.06)}
+.empty-title{font-size:1rem;font-weight:700;color:var(--heading);margin-bottom:.35rem}
+.empty-sub{font-size:.75rem;color:var(--muted);line-height:1.55;max-width:22rem;margin:0 auto}
+.empty-inline{text-align:center;padding:2rem 1rem;color:var(--muted);animation:fadeIn .35s ease-out}
+.empty-inline i{font-size:2rem;color:rgba(27,94,66,.32);display:block;margin-bottom:.5rem}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid #E8E4DC;border-top-color:var(--primary);border-right-color:rgba(201,169,98,.55);border-radius:50%;animation:spin .75s ease-in-out infinite;vertical-align:middle}
+.spinner-sm{width:14px;height:14px;border-width:2px;flex-shrink:0}
+.scan-hint{display:flex;align-items:center;justify-content:center;gap:.5rem;transition:color .2s ease}
+.scan-hint.loading{color:var(--primary);font-weight:500}
+.scan-hint.loading::before{content:'';width:14px;height:14px;border:2px solid #E8E4DC;border-top-color:var(--primary);border-right-color:rgba(201,169,98,.55);border-radius:50%;animation:spin .75s ease-in-out infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .35s ease-out}
 .sf2{width:200px;height:200px;position:relative}
-.sf2::before,.sf2::after{content:'';position:absolute;width:30px;height:30px;border-color:#fbbf24;border-style:solid}
+.sf2::before,.sf2::after{content:'';position:absolute;width:30px;height:30px;border-color:#C9A962;border-style:solid}
 .sf2::before{top:0;left:0;border-width:4px 0 0 4px;border-radius:6px 0 0 0}
 .sf2::after{top:0;right:0;border-width:4px 4px 0 0;border-radius:0 6px 0 0}
-.sfbl,.sfbr{position:absolute;width:30px;height:30px;bottom:0;border-color:#fbbf24;border-style:solid}
+.sfbl,.sfbr{position:absolute;width:30px;height:30px;bottom:0;border-color:#C9A962;border-style:solid}
 .sfbl{left:0;border-width:0 0 4px 4px;border-radius:0 0 0 6px}
 .sfbr{right:0;border-width:0 4px 4px 0;border-radius:0 0 6px 0}
-.import-drop{border:2px dashed #cbd5e1;transition:border-color .15s}
-.import-drop:hover{border-color:#2563eb}
-.dev-badge{background:linear-gradient(135deg,#1e293b,#334155);box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.import-drop{border:2px dashed #C4BDB0;transition:border-color .15s}
+.import-drop:hover{border-color:#1B5E42}
+.dev-badge{background:linear-gradient(135deg,#0F3D2E,#1B5E42);box-shadow:0 2px 10px rgba(0,0,0,.18)}
 </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="bg-cream min-h-screen text-heading">
 
 <!-- กระดิ่งแจ้งเตือนลอย -->
-<button id="notifFab" onclick="toggleNotif()" class="hidden fixed top-4 right-4 z-[600] w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 items-center justify-center">
-  <i class="ti ti-bell text-xl text-amber-500"></i>
+<button id="notifFab" onclick="toggleNotif()" class="hidden fixed top-4 right-4 z-[600] w-12 h-12 rounded-full bg-cream-card shadow-lg border border-cream-line items-center justify-center">
+  <i class="ti ti-bell text-xl text-accent"></i>
   <span id="notifCount" class="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 border-2 border-white">0</span>
 </button>
-<div id="notifPanel" class="hidden fixed top-20 right-4 z-[600] w-72 max-w-[90vw] bg-white rounded-2xl shadow-2xl p-4">
+<div id="notifPanel" class="hidden fixed top-20 right-4 z-[600] w-72 max-w-[90vw] bg-cream-card rounded-2xl shadow-soft-lg p-4">
   <div class="flex items-center gap-2 mb-3">
-    <i class="ti ti-bell-ringing text-amber-500"></i>
-    <span class="text-sm font-bold flex-1">ครุภัณฑ์ที่ยังไม่ตรวจนับ</span>
-    <button onclick="toggleNotif()" class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center"><i class="ti ti-x text-sm"></i></button>
+    <i class="ti ti-bell-ringing text-accent"></i>
+    <span class="text-sm font-bold flex-1 text-heading">ครุภัณฑ์ที่ยังไม่ตรวจนับ</span>
+    <button onclick="toggleNotif()" class="w-6 h-6 rounded-full bg-cream-input flex items-center justify-center"><i class="ti ti-x text-sm"></i></button>
   </div>
-  <div id="notifBody" class="text-xs text-amber-800 leading-relaxed max-h-48 overflow-y-auto custom-scrollbar"></div>
-  <button onclick="toggleNotif();switchView('check')" class="w-full mt-3 py-2 bg-amber-50 text-amber-800 rounded-lg text-xs font-semibold">ไปหน้าตรวจนับ →</button>
+  <div id="notifBody" class="text-xs text-gold leading-relaxed max-h-48 overflow-y-auto custom-scrollbar"></div>
+  <button onclick="toggleNotif();switchView('check')" class="w-full mt-3 py-2 bg-gold-bg text-gold rounded-lg text-xs font-semibold">ไปหน้าตรวจนับ →</button>
 </div>
 
-<header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+<header class="bg-gradient-to-r from-primary-dark to-primary text-white shadow-md sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-500/30 flex items-center justify-center"><i class="ti ti-box text-xl"></i></div>
+      <div class="bg-accent p-2 rounded-lg text-primary-dark shadow-lg shadow-accent/30 flex items-center justify-center"><i class="ti ti-box text-xl"></i></div>
       <div>
         <h1 class="text-lg font-bold tracking-wide">ทะเบียนครุภัณฑ์</h1>
-        <p class="text-[10px] text-slate-400 -mt-1">Asset Management System</p>
+        <p class="text-[10px] text-cream/70 -mt-1">Asset Management System</p>
       </div>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="syncAll(true)" id="syncBadge" class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm">
-        <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <button onclick="syncAll(true)" id="syncBadge" class="bg-accent/10 text-accent border border-accent/40 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-soft">
+        <span id="syncSpinner" class="spinner spinner-sm"></span>
+        <span id="syncDot" class="hidden w-2 h-2 rounded-full bg-accent"></span>
         <span id="syncLabel">กำลังเชื่อมต่อ...</span>
       </button>
     </div>
@@ -89,30 +125,30 @@ body{font-family:'Noto Sans Thai',sans-serif}
 
   <!-- การ์ดสรุปสถิติ -->
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
-      <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-box text-8xl"></i></div>
-      <div class="relative z-10"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ครุภัณฑ์ทั้งหมด</span><span class="text-3xl font-bold text-slate-800" id="stat-total">–</span></div>
-      <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-boxes"></i></div>
+    <div class="hs bg-cream-card rounded-xl border border-cream-line border-t-accent p-5 shadow-soft shadow-soft-hover flex items-center justify-between relative overflow-hidden group">
+      <div class="absolute right-0 bottom-0 text-cream-wm -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-box text-8xl"></i></div>
+      <div class="relative z-10"><span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">ครุภัณฑ์ทั้งหมด</span><span class="text-3xl font-bold text-accent" id="stat-total">–</span></div>
+      <div class="w-12 h-12 bg-cream-input text-primary rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-boxes"></i></div>
     </div>
-    <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
-      <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-circle-check text-8xl"></i></div>
-      <div class="relative z-10"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">ตรวจแล้วปีนี้</span><span class="text-3xl font-bold text-emerald-600" id="stat-audited">–</span></div>
-      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-circle-check"></i></div>
+    <div class="hs bg-cream-card rounded-xl border border-cream-line border-t-accent p-5 shadow-soft shadow-soft-hover flex items-center justify-between relative overflow-hidden group">
+      <div class="absolute right-0 bottom-0 text-cream-wm -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-circle-check text-8xl"></i></div>
+      <div class="relative z-10"><span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">ตรวจแล้วปีนี้</span><span class="text-3xl font-bold text-accent" id="stat-audited">–</span></div>
+      <div class="w-12 h-12 bg-good-bg text-good rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-circle-check"></i></div>
     </div>
-    <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
-      <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-category text-8xl"></i></div>
-      <div class="relative z-10"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">หมวดหมู่ระบบ</span><span class="text-3xl font-bold text-indigo-600" id="stat-cats">–</span></div>
-      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-category"></i></div>
+    <div class="hs bg-cream-card rounded-xl border border-cream-line border-t-accent p-5 shadow-soft shadow-soft-hover flex items-center justify-between relative overflow-hidden group">
+      <div class="absolute right-0 bottom-0 text-cream-wm -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-category text-8xl"></i></div>
+      <div class="relative z-10"><span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">หมวดหมู่ระบบ</span><span class="text-3xl font-bold text-accent" id="stat-cats">–</span></div>
+      <div class="w-12 h-12 bg-cream-input text-primary rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-category"></i></div>
     </div>
-    <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
-      <div class="absolute right-0 bottom-0 text-slate-100 -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-alert-circle text-8xl"></i></div>
-      <div class="relative z-10"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">รอการตรวจสอบ</span><span class="text-3xl font-bold text-amber-500" id="stat-pending">–</span></div>
-      <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-clock-hour-4"></i></div>
+    <div class="hs bg-cream-card rounded-xl border border-cream-line border-t-accent p-5 shadow-soft shadow-soft-hover flex items-center justify-between relative overflow-hidden group">
+      <div class="absolute right-0 bottom-0 text-cream-wm -mr-4 -mb-4 group-hover:scale-110 transition-transform"><i class="ti ti-alert-circle text-8xl"></i></div>
+      <div class="relative z-10"><span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">รอการตรวจสอบ</span><span class="text-3xl font-bold text-accent-dark" id="stat-pending">–</span></div>
+      <div class="w-12 h-12 bg-gold-bg text-gold rounded-xl flex items-center justify-center text-xl shadow-inner relative z-10"><i class="ti ti-clock-hour-4"></i></div>
     </div>
   </section>
 
   <!-- แท็บนำทาง -->
-  <div class="bg-white rounded-2xl border border-slate-100 p-1.5 shadow-sm mb-6 flex gap-1 overflow-x-auto custom-scrollbar">
+  <div class="ccard bg-cream-card rounded-2xl border border-cream-line p-1.5 shadow-soft mb-6 flex gap-1 overflow-x-auto custom-scrollbar">
     <button onclick="switchView('list')" class="tabbtn flex-1 min-w-[100px] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition" data-tab="list"><i class="ti ti-list-details"></i>รายการ</button>
     <button onclick="switchView('check')" class="tabbtn flex-1 min-w-[100px] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition" data-tab="check"><i class="ti ti-clipboard-check"></i>ตรวจนับ</button>
     <button onclick="switchView('scan')" class="tabbtn flex-1 min-w-[100px] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition" data-tab="scan"><i class="ti ti-qrcode"></i>สแกน QR</button>
@@ -121,171 +157,171 @@ body{font-family:'Noto Sans Thai',sans-serif}
 
   <!-- ====== หน้ารายการ ====== -->
   <section id="view-list">
-    <section class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-6">
+    <section class="ccard bg-cream-card rounded-2xl border border-cream-line p-5 shadow-soft mb-6">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="flex flex-col sm:flex-row items-stretch gap-3 flex-1 max-w-2xl">
           <div class="relative flex-1">
-            <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-            <input type="text" id="q" oninput="renderList()" placeholder="พิมพ์ชื่อ, รหัส หรือผู้ดูแล เพื่อค้นหาด่วน..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+            <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-lg"></i>
+            <input type="text" id="q" oninput="renderList()" placeholder="พิมพ์ชื่อ, รหัส หรือผู้ดูแล เพื่อค้นหาด่วน..." class="w-full pl-10 pr-4 py-2.5 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-cream-card transition">
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
-          <button onclick="openAdd()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/10 transition"><i class="ti ti-plus"></i><span>เพิ่มครุภัณฑ์ใหม่</span></button>
-          <button onclick="openImport()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition"><i class="ti ti-upload"></i><span>นำเข้า</span></button>
-          <button onclick="exportXL()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-spreadsheet"></i><span>Excel</span></button>
-          <button onclick="exportPDF()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-type-pdf"></i><span>PDF</span></button>
-          <button id="qrModeBtn" onclick="toggleQrSelectMode()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-checkbox"></i><span>เลือกพิมพ์ QR</span></button>
+          <button onclick="openAdd()" class="btn-gold bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-soft transition"><i class="ti ti-plus"></i><span>เพิ่มครุภัณฑ์ใหม่</span></button>
+          <button onclick="openImport()" class="bg-cream-input hover:bg-cream-line text-heading border border-cream-line px-3.5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition"><i class="ti ti-upload"></i><span>นำเข้า</span></button>
+          <button onclick="exportXL()" class="bg-good-bg hover:bg-good-bg/80 text-good border border-good-ring px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-spreadsheet"></i><span>Excel</span></button>
+          <button onclick="exportPDF()" class="bg-brick-bg hover:bg-brick-bg/80 text-brick border border-brick-ring px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-file-type-pdf"></i><span>PDF</span></button>
+          <button id="qrModeBtn" onclick="toggleQrSelectMode()" class="bg-gold-bg hover:bg-gold-bg/80 text-gold border border-gold-ring px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition"><i class="ti ti-checkbox"></i><span>เลือกพิมพ์ QR</span></button>
         </div>
       </div>
-      <div id="qrPrintBar" class="hidden mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2">
-        <button onclick="selectAllVisibleQR()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"><i class="ti ti-checks"></i> เลือกทั้งหมดที่แสดง</button>
-        <button onclick="clearQrSelect()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"><i class="ti ti-x"></i> ล้างการเลือก</button>
-        <button id="qrBulkPrintBtn" onclick="printBulkQR()" disabled class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"><i class="ti ti-printer"></i> พิมพ์ QR ที่เลือก (0 รายการ)</button>
+      <div id="qrPrintBar" class="hidden mt-4 pt-4 border-t border-cream-line flex flex-wrap items-center gap-2">
+        <button onclick="selectAllVisibleQR()" class="px-3 py-2 bg-cream-input hover:bg-cream-line text-heading rounded-lg text-xs font-semibold"><i class="ti ti-checks"></i> เลือกทั้งหมดที่แสดง</button>
+        <button onclick="clearQrSelect()" class="px-3 py-2 bg-cream-input hover:bg-cream-line text-heading rounded-lg text-xs font-semibold"><i class="ti ti-x"></i> ล้างการเลือก</button>
+        <button id="qrBulkPrintBtn" onclick="printBulkQR()" disabled class="btn-gold px-4 py-2 bg-primary hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-soft"><i class="ti ti-printer"></i> พิมพ์ QR ที่เลือก (0 รายการ)</button>
       </div>
       <div class="flex gap-2 mt-4 overflow-x-auto custom-scrollbar pb-1" id="catChips"></div>
     </section>
 
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">รายการครุภัณฑ์ทั้งหมด</h2>
-      <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md" id="showingCount">แสดงผล 0 รายการ</span>
+      <h2 class="text-sm font-bold text-muted uppercase tracking-wider">รายการครุภัณฑ์ทั้งหมด</h2>
+      <span class="text-xs text-muted bg-cream-input px-2.5 py-1 rounded-md" id="showingCount">แสดงผล 0 รายการ</span>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="assetGrid"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in" id="assetGrid"></div>
   </section>
 
   <!-- ====== หน้าตรวจนับ ====== -->
   <section id="view-check" class="hidden-modal">
     <div class="flex gap-2 mb-4" id="yearPills"></div>
-    <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-5">
+    <div class="ccard bg-cream-card rounded-2xl border border-cream-line p-5 shadow-soft mb-5">
       <div class="flex justify-between items-center mb-2">
-        <span class="text-sm font-bold text-slate-700">ความคืบหน้าตรวจนับ</span>
-        <span class="text-sm font-bold text-blue-600" id="checkPct">0%</span>
+        <span class="text-sm font-bold text-heading">ความคืบหน้าตรวจนับ</span>
+        <span class="text-sm font-bold text-primary" id="checkPct">0%</span>
       </div>
-      <div class="bg-slate-100 rounded-full h-2.5 overflow-hidden mb-2"><div id="checkBar" class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all" style="width:0%"></div></div>
-      <div class="text-xs text-slate-400" id="checkSummary">–</div>
+      <div class="bg-cream-input rounded-full h-2.5 overflow-hidden mb-2"><div id="checkBar" class="h-full bg-gradient-to-r from-primary-dark to-primary-light rounded-full transition-all" style="width:0%"></div></div>
+      <div class="text-xs text-muted" id="checkSummary">–</div>
     </div>
-    <button onclick="switchView('scan');scanMode='check'" class="w-full mb-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-qrcode"></i>สแกน QR เพื่อตรวจนับ</button>
+    <button onclick="switchView('scan');scanMode='check'" class="w-full mb-4 py-3 bg-gradient-to-r from-primary-dark to-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-qrcode"></i>สแกน QR เพื่อตรวจนับ</button>
     <div class="relative mb-4">
-      <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-      <input type="text" id="qc" oninput="renderCheck()" placeholder="ค้นหาในรายการตรวจนับ..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <i class="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"></i>
+      <input type="text" id="qc" oninput="renderCheck()" placeholder="ค้นหาในรายการตรวจนับ..." class="w-full pl-10 pr-4 py-2.5 bg-cream-card border border-cream-line rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary">
     </div>
     <div id="checkList" class="space-y-2"></div>
   </section>
 
   <!-- ====== หน้าสแกน QR ====== -->
   <section id="view-scan" class="hidden-modal">
-    <button onclick="startScan()" class="w-full mb-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-camera"></i>เปิดกล้องสแกน QR Code</button>
+    <button onclick="startScan()" class="w-full mb-4 py-3.5 bg-gradient-to-r from-primary-dark to-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-camera"></i>เปิดกล้องสแกน QR Code</button>
     <div id="scanWrap" class="hidden rounded-2xl overflow-hidden bg-black mb-4 relative">
       <video id="sv" autoplay playsinline muted class="w-full block"></video>
       <div class="absolute inset-0 flex items-center justify-center pointer-events-none"><div class="sf2"><div class="sfbl"></div><div class="sfbr"></div></div></div>
       <canvas id="sc2" class="hidden"></canvas>
     </div>
-    <p class="text-center text-slate-400 text-sm mb-4" id="scanHint">นำ QR Code เข้ากรอบเพื่อดึงข้อมูลครุภัณฑ์</p>
+    <p class="scan-hint text-center text-muted text-sm mb-4" id="scanHint">นำ QR Code เข้ากรอบเพื่อดึงข้อมูลครุภัณฑ์</p>
     <div id="scanResult"></div>
   </section>
 
   <!-- ====== หน้ารายงาน ====== -->
   <section id="view-report" class="hidden-modal">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="rounded-2xl p-5 bg-gradient-to-br from-blue-700 to-blue-500 text-white shadow-md"><i class="ti ti-package text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp1">0</div><div class="text-xs opacity-80">ทั้งหมด</div></div>
-      <div class="rounded-2xl p-5 bg-gradient-to-br from-emerald-700 to-emerald-500 text-white shadow-md"><i class="ti ti-circle-check text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp2">0</div><div class="text-xs opacity-80">สภาพดี</div></div>
-      <div class="rounded-2xl p-5 bg-gradient-to-br from-rose-700 to-rose-500 text-white shadow-md"><i class="ti ti-tool text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp3">0</div><div class="text-xs opacity-80">ชำรุด</div></div>
-      <div class="rounded-2xl p-5 bg-gradient-to-br from-amber-700 to-amber-500 text-white shadow-md"><i class="ti ti-clipboard-check text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp4">0</div><div class="text-xs opacity-80">ตรวจนับแล้ว</div></div>
+      <div class="rc rounded-2xl p-5 bg-gradient-to-br from-primary-dark to-primary text-white shadow-soft-rc"><i class="ti ti-package text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp1">0</div><div class="text-xs opacity-80">ทั้งหมด</div></div>
+      <div class="rc rounded-2xl p-5 bg-gradient-to-br from-primary to-primary-light text-white shadow-soft-rc"><i class="ti ti-circle-check text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp2">0</div><div class="text-xs opacity-80">สภาพดี</div></div>
+      <div class="rc rounded-2xl p-5 bg-gradient-to-br from-brick to-[#B85A48] text-white shadow-soft-rc"><i class="ti ti-tool text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp3">0</div><div class="text-xs opacity-80">ชำรุด</div></div>
+      <div class="rc rounded-2xl p-5 bg-gradient-to-br from-gold to-accent-dark text-white shadow-soft-rc"><i class="ti ti-clipboard-check text-2xl opacity-70"></i><div class="text-2xl font-bold mt-2" id="rp4">0</div><div class="text-xs opacity-80">ตรวจนับแล้ว</div></div>
     </div>
-    <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-5">
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">แยกตามหมวดหมู่</div>
+    <div class="ccard bg-cream-card rounded-2xl border border-cream-line p-5 shadow-soft mb-5">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider mb-3">แยกตามหมวดหมู่</div>
       <div id="repCat" class="space-y-1"></div>
     </div>
-    <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">แยกตามแผนก/ห้อง</div>
+    <div class="ccard bg-cream-card rounded-2xl border border-cream-line p-5 shadow-soft">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider mb-3">แยกตามแผนก/ห้อง</div>
       <div id="repDept" class="space-y-1"></div>
     </div>
   </section>
 
-  <footer class="text-center text-slate-400 text-xs mt-12 pb-6 leading-relaxed">
+  <footer class="text-center text-muted text-xs mt-12 pb-6 leading-relaxed">
     พัฒนาและออกแบบระบบโดย
-    <div class="dev-badge inline-flex items-center gap-1.5 text-white px-4 py-1.5 rounded-full mt-2 text-xs"><i class="ti ti-certificate text-amber-400"></i> วรท เกษเพ็ชร์</div>
-    <div class="mt-1 text-[10px] text-slate-300">ทะเบียนครุภัณฑ์ดิจิทัล · เชื่อมต่อ Google Sheets</div>
+    <div class="dev-badge inline-flex items-center gap-1.5 text-white px-4 py-1.5 rounded-full mt-2 text-xs"><i class="ti ti-certificate text-accent"></i> วรท เกษเพ็ชร์</div>
+    <div class="mt-1 text-[10px] text-cream-line">ทะเบียนครุภัณฑ์ดิจิทัล · เชื่อมต่อ Google Sheets</div>
   </footer>
 </main>
 
 <!-- ===== Modal: เพิ่ม/แก้ไขครุภัณฑ์ ===== -->
-<div id="addModal" class="hidden-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
-    <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
-      <div class="flex items-center gap-2"><i class="ti ti-circle-plus text-xl text-blue-400" id="formIcon"></i><h3 class="font-bold" id="formTitle">เพิ่มรายการครุภัณฑ์ใหม่</h3></div>
-      <button onclick="closeModal('addModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+<div id="addModal" class="hidden-modal fixed inset-0 bg-primary-dark/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-cream-card rounded-2xl shadow-soft-lg border border-cream-line w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="bg-gradient-to-r from-primary-dark to-primary text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+      <div class="flex items-center gap-2"><i class="ti ti-circle-plus text-xl text-accent" id="formIcon"></i><h3 class="font-bold" id="formTitle">เพิ่มรายการครุภัณฑ์ใหม่</h3></div>
+      <button onclick="closeModal('addModal')" class="text-cream/60 hover:text-white text-lg"><i class="ti ti-x"></i></button>
     </div>
     <div class="p-5 grid grid-cols-2 gap-4 overflow-y-auto custom-scrollbar">
-      <div class="col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">ชื่อครุภัณฑ์ *</label><input id="fn" type="text" placeholder="ระบุชื่อสิ่งของ เช่น โน้ตบุ๊ก Dell" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">รหัสครุภัณฑ์ *</label><input id="fc" type="text" placeholder="เช่น NB-005" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+      <div class="col-span-2"><label class="block text-xs font-semibold text-muted mb-1">ชื่อครุภัณฑ์ *</label><input id="fn" type="text" placeholder="ระบุชื่อสิ่งของ เช่น โน้ตบุ๊ก Dell" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">รหัสครุภัณฑ์ *</label><input id="fc" type="text" placeholder="เช่น NB-005" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
       <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">หมวดหมู่ *</label>
+        <label class="block text-xs font-semibold text-muted mb-1">หมวดหมู่ *</label>
         <div class="flex gap-1.5">
-          <select id="fcat" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-          <button onclick="promptAddCategory()" title="เพิ่มหมวดหมู่ใหม่" class="w-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-xl text-blue-600 flex items-center justify-center"><i class="ti ti-plus"></i></button>
+          <select id="fcat" class="flex-1 px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></select>
+          <button onclick="promptAddCategory()" title="เพิ่มหมวดหมู่ใหม่" class="w-10 flex-shrink-0 bg-cream-input border border-cream-line rounded-xl text-primary flex items-center justify-center"><i class="ti ti-plus"></i></button>
         </div>
       </div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">ยี่ห้อ/รุ่น</label><input id="fbr" type="text" placeholder="เช่น Dell OptiPlex" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">Serial No.</label><input id="fse" type="text" placeholder="หมายเลขเครื่อง" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">ปีงบประมาณ (พ.ศ.)</label><input id="fyr" type="number" placeholder="2569" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">ราคาทุน (บาท)</label><input id="fpr" type="number" placeholder="0.00" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">แผนก/สถานที่จัดวาง</label><input id="fdp" type="text" placeholder="เช่น ฝ่ายไอที ชั้น 3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">ผู้รับผิดชอบดูแล</label><input id="fow" type="text" placeholder="ชื่อ-นามสกุล" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-      <div><label class="block text-xs font-semibold text-slate-500 mb-1">สภาพ</label>
-        <select id="fst" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div><label class="block text-xs font-semibold text-muted mb-1">ยี่ห้อ/รุ่น</label><input id="fbr" type="text" placeholder="เช่น Dell OptiPlex" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">Serial No.</label><input id="fse" type="text" placeholder="หมายเลขเครื่อง" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">ปีงบประมาณ (พ.ศ.)</label><input id="fyr" type="number" placeholder="2569" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">ราคาทุน (บาท)</label><input id="fpr" type="number" placeholder="0.00" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">แผนก/สถานที่จัดวาง</label><input id="fdp" type="text" placeholder="เช่น ฝ่ายไอที ชั้น 3" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">ผู้รับผิดชอบดูแล</label><input id="fow" type="text" placeholder="ชื่อ-นามสกุล" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"></div>
+      <div><label class="block text-xs font-semibold text-muted mb-1">สภาพ</label>
+        <select id="fst" class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary">
           <option value="ดี">สภาพดี</option><option value="ชำรุด">ชำรุด/รอซ่อม</option><option value="รอตรวจ">รอตรวจสอบ</option>
         </select>
       </div>
-      <div class="col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">หมายเหตุ</label><textarea id="fno" placeholder="รายละเอียดเพิ่มเติม..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[60px]"></textarea></div>
+      <div class="col-span-2"><label class="block text-xs font-semibold text-muted mb-1">หมายเหตุ</label><textarea id="fno" placeholder="รายละเอียดเพิ่มเติม..." class="w-full px-3 py-2 bg-cream-input border border-cream-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[60px]"></textarea></div>
     </div>
-    <div class="bg-slate-50 px-5 py-3.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-shrink-0">
-      <button id="btnDel" onclick="delAsset()" class="hidden px-4 py-2 bg-rose-50 text-rose-600 text-sm font-semibold rounded-xl hover:bg-rose-100 transition"><i class="ti ti-trash"></i></button>
+    <div class="bg-cream px-5 py-3.5 border-t border-cream-line flex items-center justify-between gap-2 flex-shrink-0">
+      <button id="btnDel" onclick="delAsset()" class="hidden px-4 py-2 bg-brick-bg text-brick text-sm font-semibold rounded-xl hover:bg-brick-bg/80 transition"><i class="ti ti-trash"></i></button>
       <div class="flex gap-2 ml-auto">
-        <button onclick="closeModal('addModal')" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">ยกเลิก</button>
-        <button onclick="saveAsset()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/10 transition">บันทึกรายการ</button>
+        <button onclick="closeModal('addModal')" class="px-4 py-2 bg-cream-card border border-cream-line text-heading text-sm font-semibold rounded-xl hover:bg-cream-input transition">ยกเลิก</button>
+        <button onclick="saveAsset()" class="btn-gold px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark shadow-soft transition">บันทึกรายการ</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== Modal: รายละเอียด + QR ===== -->
-<div id="detailModal" class="hidden-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
-    <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+<div id="detailModal" class="hidden-modal fixed inset-0 bg-primary-dark/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-cream-card rounded-2xl shadow-soft-lg border border-cream-line w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="bg-gradient-to-r from-primary-dark to-primary text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
       <h3 class="font-bold" id="detailTitle">รายละเอียด</h3>
-      <button onclick="closeModal('detailModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+      <button onclick="closeModal('detailModal')" class="text-cream/60 hover:text-white text-lg"><i class="ti ti-x"></i></button>
     </div>
     <div class="p-5 overflow-y-auto custom-scrollbar" id="detailBody"></div>
   </div>
 </div>
 
 <!-- ===== Modal: สแกน QR แบบป๊อปอัป (ใช้กับปุ่มเร็วในการ์ด) ===== -->
-<div id="scanModal" class="hidden-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-sm overflow-hidden">
-    <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2"><i class="ti ti-qrcode text-xl text-amber-400"></i><h3 class="font-bold">QR Code ครุภัณฑ์</h3></div>
-      <button onclick="closeModal('scanModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+<div id="scanModal" class="hidden-modal fixed inset-0 bg-primary-dark/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-cream-card rounded-2xl shadow-soft-lg border border-cream-line w-full max-w-sm overflow-hidden">
+    <div class="bg-gradient-to-r from-primary-dark to-primary text-white px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2"><i class="ti ti-qrcode text-xl text-accent"></i><h3 class="font-bold">QR Code ครุภัณฑ์</h3></div>
+      <button onclick="closeModal('scanModal')" class="text-cream/60 hover:text-white text-lg"><i class="ti ti-x"></i></button>
     </div>
     <div class="p-6 text-center" id="qrModalBody"></div>
   </div>
 </div>
 
 <!-- ===== Modal: นำเข้าข้อมูล ===== -->
-<div id="importModal" class="hidden-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
-    <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
-      <div class="flex items-center gap-2"><i class="ti ti-upload text-xl text-blue-400"></i><h3 class="font-bold">นำเข้าข้อมูลครุภัณฑ์</h3></div>
-      <button onclick="closeModal('importModal')" class="text-slate-400 hover:text-white text-lg"><i class="ti ti-x"></i></button>
+<div id="importModal" class="hidden-modal fixed inset-0 bg-primary-dark/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-cream-card rounded-2xl shadow-soft-lg border border-cream-line w-full max-w-lg overflow-hidden max-h-[92vh] flex flex-col">
+    <div class="bg-gradient-to-r from-primary-dark to-primary text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+      <div class="flex items-center gap-2"><i class="ti ti-upload text-xl text-accent"></i><h3 class="font-bold">นำเข้าข้อมูลครุภัณฑ์</h3></div>
+      <button onclick="closeModal('importModal')" class="text-cream/60 hover:text-white text-lg"><i class="ti ti-x"></i></button>
     </div>
     <div class="p-5 overflow-y-auto custom-scrollbar">
-      <div class="flex items-start gap-2 bg-blue-50 text-blue-800 rounded-xl p-3 text-xs mb-4">
-        <i class="ti ti-info-circle text-base flex-shrink-0 mt-0.5"></i>
-        <span>ใช้แบบฟอร์มมาตรฐานเพื่อป้องกัน Error — <button onclick="downloadTemplate()" class="underline font-semibold">ดาวน์โหลดเทมเพลต Excel</button></span>
+      <div class="flex items-start gap-2 bg-good-bg text-heading rounded-xl p-3 text-xs mb-4">
+        <i class="ti ti-info-circle text-base flex-shrink-0 mt-0.5 text-primary"></i>
+        <span>ใช้แบบฟอร์มมาตรฐานเพื่อป้องกัน Error — <button onclick="downloadTemplate()" class="underline font-semibold text-primary">ดาวน์โหลดเทมเพลต Excel</button></span>
       </div>
-      <div id="dropZone" class="import-drop rounded-xl p-7 text-center text-slate-400 cursor-pointer mb-4" onclick="document.getElementById('fileInput').click()">
+      <div id="dropZone" class="import-drop rounded-xl p-7 text-center text-muted cursor-pointer mb-4" onclick="document.getElementById('fileInput').click()">
         <i class="ti ti-file-upload text-4xl block mb-2"></i>
-        <div class="text-sm font-semibold text-slate-600">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</div>
-        <div class="text-xs text-slate-400 mt-1">รองรับ .xlsx, .xls, .csv</div>
+        <div class="text-sm font-semibold text-heading">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</div>
+        <div class="text-xs text-muted mt-1">รองรับ .xlsx, .xls, .csv</div>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFile(this.files[0])">
       <div id="importPreviewArea"></div>
@@ -301,7 +337,7 @@ let assets=[],checks={},categories=[],filt='all',curY=new Date().getFullYear()+5
 let qrSelMode=false,qrSelected=new Set();
 let currentView='list';
 
-const TAB_COLORS={list:'bg-blue-600 text-white',check:'bg-blue-600 text-white',scan:'bg-blue-600 text-white',report:'bg-blue-600 text-white'};
+const TAB_COLORS={list:'bg-primary text-white',check:'bg-primary text-white',scan:'bg-primary text-white',report:'bg-primary text-white'};
 const DEFAULT_CAT_ICONS={'คอมพิวเตอร์':'ti-device-desktop','เฟอร์นิเจอร์':'ti-armchair','เครื่องใช้ไฟฟ้า':'ti-plug','ยานพาหนะ':'ti-car','อุปกรณ์สำนักงาน':'ti-printer','อื่นๆ':'ti-package'};
 
 function uid(){return 'A'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,4).toUpperCase();}
@@ -309,12 +345,13 @@ function catIcon(cat){return DEFAULT_CAT_ICONS[cat]||'ti-box';}
 function toast(m,d=2600){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 
 function setSyncState(s){
-  const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel'),badge=document.getElementById('syncBadge');
+  const dot=document.getElementById('syncDot'),spin=document.getElementById('syncSpinner'),lbl=document.getElementById('syncLabel'),badge=document.getElementById('syncBadge');
   dot.className='w-2 h-2 rounded-full';
-  badge.className='px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm border';
-  if(s==='ok'){dot.classList.add('bg-emerald-400');badge.classList.add('bg-emerald-500/10','text-emerald-400','border-emerald-500/20');lbl.textContent='ซิงค์ Google Sheets สำเร็จ ✓';}
-  else if(s==='err'){dot.classList.add('bg-rose-400');badge.classList.add('bg-rose-500/10','text-rose-400','border-rose-500/20');lbl.textContent='ออฟไลน์ — แตะเพื่อลองใหม่';}
-  else{dot.classList.add('bg-amber-400','animate-pulse');badge.classList.add('bg-amber-500/10','text-amber-400','border-amber-500/20');lbl.textContent='กำลังเชื่อมต่อ...';}
+  spin.className='spinner spinner-sm';
+  badge.className='px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-soft border';
+  if(s==='ok'){dot.classList.remove('hidden');spin.classList.add('hidden');dot.classList.add('bg-[#A8D5B8]');badge.classList.add('bg-[#A8D5B8]/10','text-[#A8D5B8]','border-[#A8D5B8]/30');lbl.textContent='ซิงค์ Google Sheets สำเร็จ ✓';}
+  else if(s==='err'){dot.classList.remove('hidden');spin.classList.add('hidden');dot.classList.add('bg-rose-400');badge.classList.add('bg-rose-500/10','text-rose-400','border-rose-500/20');lbl.textContent='ออฟไลน์ — แตะเพื่อลองใหม่';}
+  else{spin.classList.remove('hidden');dot.classList.add('hidden');badge.classList.add('bg-accent/10','text-accent','border-accent/40');lbl.textContent='กำลังเชื่อมต่อ...';}
 }
 
 async function apig(p){const r=await fetch(API+'?'+new URLSearchParams(p),{redirect:'follow'});const tx=await r.text();return JSON.parse(tx);}
@@ -359,7 +396,7 @@ function checkNotif(){
   if(unc.length){
     fab.classList.remove('hidden');fab.classList.add('flex');
     document.getElementById('notifCount').textContent=unc.length>99?'99+':unc.length;
-    document.getElementById('notifBody').innerHTML=unc.slice(0,15).map(a=>`<div class="py-1.5 border-b border-amber-50 last:border-0">${a.name||'(ไม่มีชื่อ)'} <span class="opacity-60">· ${a.code||''}</span></div>`).join('')+(unc.length>15?`<div class="py-1.5 text-center opacity-60">และอีก ${unc.length-15} รายการ</div>`:'');
+    document.getElementById('notifBody').innerHTML=unc.slice(0,15).map(a=>`<div class="py-1.5 border-b border-gold-bg last:border-0">${a.name||'(ไม่มีชื่อ)'} <span class="opacity-60">· ${a.code||''}</span></div>`).join('')+(unc.length>15?`<div class="py-1.5 text-center opacity-60">และอีก ${unc.length-15} รายการ</div>`:'');
   }else{
     fab.classList.add('hidden');fab.classList.remove('flex');
     document.getElementById('notifPanel').classList.add('hidden');
@@ -374,7 +411,7 @@ function switchView(v){
   });
   document.querySelectorAll('.tabbtn').forEach(b=>{
     const on=b.dataset.tab===v;
-    b.className='tabbtn flex-1 min-w-[100px] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition '+(on?'bg-blue-600 text-white shadow-md shadow-blue-600/20':'text-slate-500 hover:bg-slate-50');
+    b.className='tabbtn flex-1 min-w-[100px] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition '+(on?'bg-primary text-white shadow-soft tab-on':'text-muted hover:bg-cream-input');
   });
   if(v!=='scan'){stopScan();scanMode='lookup';}
   if(v==='list')renderList();
@@ -388,7 +425,7 @@ function renderCategoryChips(){
   const chips=[['all','ทั้งหมด'],['ดี','สภาพดี'],['ชำรุด','ชำรุด'],['รอตรวจ','รอตรวจ']];
   wrap.innerHTML=chips.map(([val,label])=>{
     const on=filt===val;
-    return `<button onclick="setFilter('${val}')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${on?'bg-blue-600 text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${label}</button>`;
+    return `<button onclick="setFilter('${val}')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${on?'bg-primary text-white':'bg-cream-input text-muted hover:bg-cream-line'}">${label}</button>`;
   }).join('');
 }
 function setFilter(f){filt=f;renderCategoryChips();renderList();}
@@ -415,9 +452,9 @@ async function promptAddCategory(){
 }
 
 function statusBadgeClass(status){
-  if(status==='ดี')return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-  if(status==='ชำรุด')return 'bg-rose-50 text-rose-700 border border-rose-100';
-  return 'bg-amber-50 text-amber-700 border border-amber-100';
+  if(status==='ดี')return 'bg-good-bg text-good border border-good-ring';
+  if(status==='ชำรุด')return 'bg-brick-bg text-brick border border-brick-ring';
+  return 'bg-gold-bg text-gold border border-gold-ring';
 }
 function statusLabel(status){return status==='ดี'?'ดี':status==='ชำรุด'?'ชำรุด':'รอตรวจ';}
 
@@ -436,7 +473,7 @@ function toggleQrSelectMode(){
   const btn=document.getElementById('qrModeBtn');
   if(btn){
     btn.innerHTML=qrSelMode?'<i class="ti ti-x"></i><span>ยกเลิกโหมดเลือก</span>':'<i class="ti ti-checkbox"></i><span>เลือกพิมพ์ QR</span>';
-    btn.className=qrSelMode?'bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-md transition':'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition';
+    btn.className=qrSelMode?'bg-accent-dark hover:bg-accent text-white px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 shadow-md transition':'bg-gold-bg hover:bg-gold-bg/80 text-gold border border-gold-ring px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition';
   }
   document.getElementById('qrPrintBar').classList.toggle('hidden',!qrSelMode);
   updateQrPrintBar();renderList();
@@ -460,49 +497,49 @@ function renderList(){
   document.getElementById('showingCount').textContent='แสดงผล '+data.length+' รายการ';
   const grid=document.getElementById('assetGrid');
   if(!assets.length){
-    grid.innerHTML=`<div class="col-span-full bg-white rounded-2xl border border-slate-100 p-12 shadow-sm text-center">
-      <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"><i class="ti ti-database-off"></i></div>
-      <h3 class="text-base font-bold text-slate-700">ยังไม่มีข้อมูลใน Google Sheets</h3>
-      <p class="text-xs text-slate-400 mt-1 mb-4">เริ่มต้นโดยการเพิ่มครุภัณฑ์ หรือโหลดข้อมูลตัวอย่าง</p>
-      <button onclick="loadDemo()" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold inline-flex items-center gap-2"><i class="ti ti-sparkles"></i>โหลดข้อมูลตัวอย่าง</button>
+    grid.innerHTML=`<div class="col-span-full empty ccard bg-cream-card rounded-2xl border border-cream-line p-12 shadow-soft">
+      <div class="empty-icon"><i class="ti ti-database-off"></i></div>
+      <h3 class="empty-title">ยังไม่มีข้อมูลใน Google Sheets</h3>
+      <p class="empty-sub">เริ่มต้นได้ด้วยการเพิ่มรายการ หรือลองโหลดตัวอย่างด้านล่าง</p>
+      <button onclick="loadDemo()" class="btn-gold mt-5 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold inline-flex items-center gap-2"><i class="ti ti-sparkles"></i>โหลดข้อมูลตัวอย่าง</button>
     </div>`;
     return;
   }
   if(!data.length){
-    grid.innerHTML=`<div class="col-span-full bg-white rounded-2xl border border-slate-100 p-12 shadow-sm text-center">
-      <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"><i class="ti ti-search-off"></i></div>
-      <h3 class="text-base font-bold text-slate-700">ไม่พบข้อมูลครุภัณฑ์ที่ค้นหา</h3>
-      <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองข้อมูล</p>
+    grid.innerHTML=`<div class="col-span-full empty ccard bg-cream-card rounded-2xl border border-cream-line p-12 shadow-soft">
+      <div class="empty-icon"><i class="ti ti-search-off"></i></div>
+      <h3 class="empty-title">ไม่พบข้อมูลครุภัณฑ์ที่ค้นหา</h3>
+      <p class="empty-sub">ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองดูนะ</p>
     </div>`;
     return;
   }
   grid.innerHTML=data.map(a=>{
     const isChecked=!!checks[a.id+'_'+curY];
     const isSel=qrSelected.has(a.id);
-    return `<div class="bg-white rounded-2xl border ${isSel?'border-blue-400 ring-2 ring-blue-100':'border-slate-100'} shadow-sm overflow-hidden flex flex-col hover:shadow-md transition">
-      ${qrSelMode?`<label class="flex items-center gap-2 px-5 pt-4 cursor-pointer" onclick="event.stopPropagation()"><input type="checkbox" ${isSel?'checked':''} onchange="toggleQrSelect('${a.id}')" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="text-xs font-semibold text-blue-600">เลือกพิมพ์ QR</span></label>`:''}
+    return `<div class="acard bg-cream-card rounded-2xl border ${isSel?'border-accent ring-2 ring-accent/35':'border-cream-line'} shadow-soft shadow-soft-hover overflow-hidden flex flex-col fade-in">
+      ${qrSelMode?`<label class="flex items-center gap-2 px-5 pt-4 cursor-pointer" onclick="event.stopPropagation()"><input type="checkbox" ${isSel?'checked':''} onchange="toggleQrSelect('${a.id}')" class="w-4 h-4 rounded border-cream-line text-primary focus:ring-primary"><span class="text-xs font-semibold text-primary">เลือกพิมพ์ QR</span></label>`:''}
       <div class="p-5 flex-1 cursor-pointer ${qrSelMode?'pt-2':''}" onclick="handleCardClick('${a.id}')">
         <div class="flex items-start justify-between gap-2">
-          <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">${a.cat||'อื่นๆ'}</span>
+          <span class="bg-cream-input text-heading text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide uppercase">${a.cat||'อื่นๆ'}</span>
           <span class="${statusBadgeClass(a.status)} text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">${statusLabel(a.status)}</span>
         </div>
-        <h3 class="text-base font-bold text-slate-800 mt-3 line-clamp-1">${a.name||''}</h3>
-        <p class="text-xs text-slate-400 font-medium">รหัส: <span class="text-slate-600">${a.code||''}</span></p>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500">
-          <div class="flex items-center gap-2"><i class="ti ti-map-pin text-slate-400"></i><span class="truncate">${a.dept||'–'}</span></div>
-          <div class="flex items-center gap-2"><i class="ti ti-user text-slate-400"></i><span class="truncate">${a.owner||'–'}</span></div>
-          <div class="flex items-center gap-2"><i class="ti ti-calendar text-slate-400"></i><span>ปีงบฯ ${a.year||'–'}</span></div>
-          <div class="flex items-center gap-2"><i class="ti ti-coin text-slate-400"></i><span class="font-semibold text-slate-700">${a.price?'฿'+Number(a.price).toLocaleString():'–'}</span></div>
+        <h3 class="text-base font-bold text-heading mt-3 line-clamp-1">${a.name||''}</h3>
+        <p class="text-xs text-muted font-medium">รหัส: <span class="text-heading/70">${a.code||''}</span></p>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-cream-line/50 text-xs text-muted">
+          <div class="flex items-center gap-2"><i class="ti ti-map-pin text-muted"></i><span class="truncate">${a.dept||'–'}</span></div>
+          <div class="flex items-center gap-2"><i class="ti ti-user text-muted"></i><span class="truncate">${a.owner||'–'}</span></div>
+          <div class="flex items-center gap-2"><i class="ti ti-calendar text-muted"></i><span>ปีงบฯ ${a.year||'–'}</span></div>
+          <div class="flex items-center gap-2"><i class="ti ti-coin text-muted"></i><span class="font-semibold text-heading">${a.price?'฿'+Number(a.price).toLocaleString():'–'}</span></div>
         </div>
       </div>
-      <div class="bg-slate-50 px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2" onclick="event.stopPropagation()">
-        <button onclick="toggleCheck('${a.id}')" class="text-xs font-bold ${isChecked?'bg-emerald-600 hover:bg-emerald-700 text-white':'bg-slate-200 text-slate-700 hover:bg-slate-300'} px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
+      <div class="bg-cream px-4 py-3 border-t border-cream-line flex items-center justify-between gap-2" onclick="event.stopPropagation()">
+        <button onclick="toggleCheck('${a.id}')" class="text-xs font-bold ${isChecked?'bg-primary hover:bg-primary-dark text-white':'bg-cream-input text-heading hover:bg-cream-line'} px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
           <i class="ti ${isChecked?'ti-check':'ti-square'} text-sm"></i><span>${isChecked?'ตรวจแล้ว':'รอตรวจสอบ'}</span>
         </button>
         <div class="flex items-center gap-1">
-          <button onclick="openEdit('${a.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="แก้ไข"><i class="ti ti-edit"></i></button>
-          <button onclick="openQRModal('${a.id}')" class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-md transition" title="QR"><i class="ti ti-qrcode"></i></button>
-          <button onclick="quickDelete('${a.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition" title="ลบ"><i class="ti ti-trash"></i></button>
+          <button onclick="openEdit('${a.id}')" class="p-1.5 text-muted hover:text-primary hover:bg-good-bg rounded-md transition" title="แก้ไข"><i class="ti ti-edit"></i></button>
+          <button onclick="openQRModal('${a.id}')" class="p-1.5 text-muted hover:text-accent-dark hover:bg-gold-bg rounded-md transition" title="QR"><i class="ti ti-qrcode"></i></button>
+          <button onclick="quickDelete('${a.id}')" class="p-1.5 text-muted hover:text-brick hover:bg-brick-bg rounded-md transition" title="ลบ"><i class="ti ti-trash"></i></button>
         </div>
       </div>
     </div>`;
@@ -586,29 +623,29 @@ function openDetail(id){
   document.getElementById('detailTitle').textContent=a.name||'';
   document.getElementById('detailBody').innerHTML=`
     <div class="flex items-center gap-3 mb-4">
-      <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-2xl"><i class="ti ${catIcon(a.cat)}"></i></div>
-      <div><div class="text-base font-bold text-slate-800">${a.name||''}</div><span class="${statusBadgeClass(a.status)} text-xs font-bold px-2.5 py-0.5 rounded-full inline-block mt-1">${statusLabel(a.status)}</span></div>
+      <div class="w-14 h-14 bg-cream-input text-primary rounded-xl flex items-center justify-center text-2xl"><i class="ti ${catIcon(a.cat)}"></i></div>
+      <div><div class="text-base font-bold text-heading">${a.name||''}</div><span class="${statusBadgeClass(a.status)} text-xs font-bold px-2.5 py-0.5 rounded-full inline-block mt-1">${statusLabel(a.status)}</span></div>
     </div>
-    <div class="bg-slate-50 rounded-xl p-4 mb-4 space-y-0.5">
-      ${[['รหัส',a.code||'–'],['หมวดหมู่',a.cat||'–'],['ยี่ห้อ/รุ่น',a.brand||'–'],['Serial No.',a.serial||'–'],['ราคา',a.price?Number(a.price).toLocaleString()+' บาท':'–'],['ปีงบฯ',a.year?'พ.ศ. '+a.year:'–'],['แผนก/ห้อง',a.dept||'–'],['ผู้รับผิดชอบ',a.owner||'–'],['หมายเหตุ',a.note||'–']].map(([k,v])=>`<div class="flex justify-between py-1.5 border-b border-slate-100 last:border-0 text-xs"><span class="text-slate-400">${k}</span><span class="font-semibold text-slate-700 text-right max-w-[60%]">${v}</span></div>`).join('')}
+    <div class="bg-cream rounded-xl p-4 mb-4 space-y-0.5">
+      ${[['รหัส',a.code||'–'],['หมวดหมู่',a.cat||'–'],['ยี่ห้อ/รุ่น',a.brand||'–'],['Serial No.',a.serial||'–'],['ราคา',a.price?Number(a.price).toLocaleString()+' บาท':'–'],['ปีงบฯ',a.year?'พ.ศ. '+a.year:'–'],['แผนก/ห้อง',a.dept||'–'],['ผู้รับผิดชอบ',a.owner||'–'],['หมายเหตุ',a.note||'–']].map(([k,v])=>`<div class="flex justify-between py-1.5 border-b border-cream-line last:border-0 text-xs"><span class="text-muted">${k}</span><span class="font-semibold text-heading text-right max-w-[60%]">${v}</span></div>`).join('')}
     </div>
-    <div class="bg-slate-50 rounded-xl p-4 mb-4">
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">การตรวจนับปี ${curY}</div>
-      <div class="flex justify-between text-xs py-1"><span class="text-slate-400">สถานะ</span><span class="font-semibold ${ck?'text-emerald-600':'text-rose-600'}">${ck?'✓ ตรวจแล้ว':'✗ ยังไม่ตรวจ'}</span></div>
-      ${ck?`<div class="flex justify-between text-xs py-1"><span class="text-slate-400">วันที่ตรวจ</span><span class="font-semibold text-slate-700">${ck.at?new Date(ck.at).toLocaleDateString('th-TH'):'–'}</span></div>`:''}
+    <div class="bg-cream rounded-xl p-4 mb-4">
+      <div class="text-[10px] font-bold text-muted uppercase tracking-wider mb-2">การตรวจนับปี ${curY}</div>
+      <div class="flex justify-between text-xs py-1"><span class="text-muted">สถานะ</span><span class="font-semibold ${ck?'text-good':'text-brick'}">${ck?'✓ ตรวจแล้ว':'✗ ยังไม่ตรวจ'}</span></div>
+      ${ck?`<div class="flex justify-between text-xs py-1"><span class="text-muted">วันที่ตรวจ</span><span class="font-semibold text-heading">${ck.at?new Date(ck.at).toLocaleDateString('th-TH'):'–'}</span></div>`:''}
     </div>
-    <div class="bg-slate-50 rounded-xl p-4 mb-4 text-center">
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">QR Code สำหรับติดครุภัณฑ์</div>
+    <div class="bg-cream rounded-xl p-4 mb-4 text-center">
+      <div class="text-[10px] font-bold text-muted uppercase tracking-wider mb-3">QR Code สำหรับติดครุภัณฑ์</div>
       <div class="flex justify-center mb-2" id="qrd"></div>
-      <p class="text-xs text-slate-400 mb-3">สแกนเพื่อดูข้อมูล ${a.code||''}</p>
+      <p class="text-xs text-muted mb-3">สแกนเพื่อดูข้อมูล ${a.code||''}</p>
       <div class="grid grid-cols-2 gap-2">
-        <button onclick="printQR('${a.id}')" class="py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-printer"></i>พิมพ์ QR</button>
-        <button onclick="downloadQR('${a.id}')" class="py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-download"></i>บันทึกรูป</button>
+        <button onclick="printQR('${a.id}')" class="py-2 bg-primary text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-printer"></i>พิมพ์ QR</button>
+        <button onclick="downloadQR('${a.id}')" class="py-2 bg-cream-input text-heading rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-download"></i>บันทึกรูป</button>
       </div>
     </div>
     <div class="flex gap-2">
-      <button onclick="openEdit('${a.id}')" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"><i class="ti ti-edit"></i>แก้ไขข้อมูล</button>
-      <button onclick="closeModal('detailModal')" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">ปิด</button>
+      <button onclick="openEdit('${a.id}')" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"><i class="ti ti-edit"></i>แก้ไขข้อมูล</button>
+      <button onclick="closeModal('detailModal')" class="px-5 py-2.5 bg-cream-input text-muted rounded-xl text-sm font-semibold">ปิด</button>
     </div>`;
   document.getElementById('detailModal').classList.remove('hidden-modal');
   whenQRCodeReady(()=>{
@@ -625,12 +662,12 @@ function openDetail(id){
 function openQRModal(id){
   const a=assets.find(x=>x.id===id);if(!a)return;
   document.getElementById('qrModalBody').innerHTML=`
-    <div class="font-bold text-slate-800 mb-1">${a.name||''}</div>
-    <div class="text-xs text-slate-400 mb-3">${a.code||''}</div>
+    <div class="font-bold text-heading mb-1">${a.name||''}</div>
+    <div class="text-xs text-muted mb-3">${a.code||''}</div>
     <div class="flex justify-center mb-4" id="qrModalQR"></div>
     <div class="grid grid-cols-2 gap-2">
-      <button onclick="printQR('${a.id}')" class="py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-printer"></i>พิมพ์ QR</button>
-      <button onclick="downloadQR('${a.id}')" class="py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-download"></i>บันทึกรูป</button>
+      <button onclick="printQR('${a.id}')" class="py-2 bg-primary text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-printer"></i>พิมพ์ QR</button>
+      <button onclick="downloadQR('${a.id}')" class="py-2 bg-cream-input text-heading rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"><i class="ti ti-download"></i>บันทึกรูป</button>
     </div>`;
   document.getElementById('scanModal').classList.remove('hidden-modal');
   whenQRCodeReady(()=>{
@@ -697,9 +734,9 @@ function openBulkPrintWindow(stickers){
 @page{size:A4 portrait;margin:8mm}*{box-sizing:border-box}body{font-family:system-ui,'Noto Sans Thai',sans-serif;margin:0}
 .page{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:4mm;page-break-after:always;height:281mm;padding:0}
 .page:last-child{page-break-after:auto}
-.sticker{border:2px dashed #94a3b8;border-radius:6px;padding:2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;height:91mm}
-.sticker img{width:190px;height:190px}.sticker .name{font-size:9px;font-weight:600;color:#0f172a;margin-top:1.5mm;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
-.sticker .code{font-size:10px;font-weight:700;color:#1e3a8a;margin-top:1mm;letter-spacing:.5px}.sticker .credit{font-size:7px;color:#94a3b8;margin-top:1.5mm}
+.sticker{border:2px dashed #94a3b8;border-radius:6px;padding:2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;height:91mm}
+.sticker img{width:88%;height:auto;max-height:72mm;aspect-ratio:1/1;object-fit:contain;flex-shrink:0}.sticker .name{font-size:11px;font-weight:600;color:#0f172a;margin-top:1mm;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%}
+.sticker .code{font-size:12px;font-weight:700;color:#1e3a8a;margin-top:.5mm;letter-spacing:.5px;width:100%}.sticker .credit{font-size:9px;color:#94a3b8;margin-top:.5mm;width:100%}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>${pageHtml}</body></html>`);
   w.document.close();setTimeout(()=>w.print(),400);
@@ -720,7 +757,7 @@ function printBulkQR(){
       const a=items[idx++],tmp=document.createElement('div');
       tmp.style.display='none';document.body.appendChild(tmp);
       try{
-        new QRCode(tmp,{text:qrPayload(a),width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+        new QRCode(tmp,{text:qrPayload(a),width:280,height:280,correctLevel:QRCode.CorrectLevel.M});
         setTimeout(()=>{
           const img=tmp.querySelector('img')?tmp.querySelector('img').src:(tmp.querySelector('canvas')?tmp.querySelector('canvas').toDataURL():'');
           document.body.removeChild(tmp);
@@ -738,7 +775,7 @@ function renderCheck(){
   const yrs=[curY,curY-1,curY-2];
   document.getElementById('yearPills').innerHTML=yrs.map(y=>{
     const on=y===curY;
-    return `<button onclick="setYear(${y})" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${on?'bg-blue-600 text-white':'bg-white border border-slate-200 text-slate-600'}">${y}</button>`;
+    return `<button onclick="setYear(${y})" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${on?'bg-primary text-white ring-1 ring-accent/50':'bg-cream-card border border-cream-line text-muted'}">${y}</button>`;
   }).join('');
   const ck=assets.filter(a=>checks[a.id+'_'+curY]).length,tot=assets.length,pct=tot?Math.round(ck/tot*100):0;
   document.getElementById('checkPct').textContent=pct+'%';
@@ -747,14 +784,14 @@ function renderCheck(){
   const q=(document.getElementById('qc').value||'').toLowerCase();
   const data=assets.filter(a=>!q||[(a.name||''),(a.code||''),(a.dept||'')].some(v=>v.toLowerCase().includes(q)));
   const list=document.getElementById('checkList');
-  if(!assets.length){list.innerHTML='<div class="bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-400"><i class="ti ti-database-off text-3xl block mb-2"></i>ยังไม่มีครุภัณฑ์</div>';return;}
-  if(!data.length){list.innerHTML='<div class="bg-white rounded-2xl border border-slate-100 p-10 text-center text-slate-400"><i class="ti ti-search-off text-3xl block mb-2"></i>ไม่พบรายการ</div>';return;}
+  if(!assets.length){list.innerHTML='<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line p-10 shadow-soft"><div class="empty-icon"><i class="ti ti-database-off"></i></div><h3 class="empty-title">ยังไม่มีครุภัณฑ์</h3><p class="empty-sub">เมื่อมีครุภัณฑ์ในระบบ รายการจะแสดงที่นี่</p></div>';return;}
+  if(!data.length){list.innerHTML='<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line p-10 shadow-soft"><div class="empty-icon"><i class="ti ti-search-off"></i></div><h3 class="empty-title">ไม่พบรายการ</h3><p class="empty-sub">ไม่มีรายการตรงกับคำค้นหา</p></div>';return;}
   list.innerHTML=data.map(a=>{
     const isC=!!checks[a.id+'_'+curY];
-    return `<div class="bg-white rounded-xl border border-slate-100 shadow-sm p-3 flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isC?'bg-emerald-50 text-emerald-600':'bg-slate-100 text-slate-500'}"><i class="ti ${catIcon(a.cat)}"></i></div>
-      <div class="flex-1 min-w-0"><div class="text-sm font-semibold text-slate-800 truncate">${a.name||''}</div><div class="text-xs text-slate-400">${a.code||''} · ${a.dept||'–'}</div></div>
-      <button onclick="toggleCheck('${a.id}')" class="w-11 h-6 rounded-full relative transition flex-shrink-0 ${isC?'bg-blue-600':'bg-slate-200'}">
+    return `<div class="ccard bg-cream-card rounded-xl border border-cream-line shadow-soft p-3 flex items-center gap-3 fade-in">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isC?'bg-good-bg text-good':'bg-cream-input text-muted'}"><i class="ti ${catIcon(a.cat)}"></i></div>
+      <div class="flex-1 min-w-0"><div class="text-sm font-semibold text-heading truncate">${a.name||''}</div><div class="text-xs text-muted">${a.code||''} · ${a.dept||'–'}</div></div>
+      <button onclick="toggleCheck('${a.id}')" class="w-11 h-6 rounded-full relative transition flex-shrink-0 ${isC?'bg-primary':'bg-cream-line'}">
         <span class="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${isC?'left-[22px]':'left-0.5'}"></span>
       </button>
     </div>`;
@@ -776,7 +813,9 @@ async function startScan(){
     scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     document.getElementById('sv').srcObject=scanStream;
     document.getElementById('scanWrap').classList.remove('hidden');
-    document.getElementById('scanHint').textContent=scanMode==='check'?'กำลังสแกนเพื่อตรวจนับ...':'กำลังสแกน...';
+    const hint=document.getElementById('scanHint');
+    hint.className='scan-hint text-center text-sm mb-4 loading';
+    hint.textContent=scanMode==='check'?'กำลังสแกนเพื่อตรวจนับ...':'กำลังสแกน...';
     document.getElementById('scanResult').innerHTML='';
     const canvas=document.getElementById('sc2'),ctx=canvas.getContext('2d'),vid=document.getElementById('sv');
     scanInt=setInterval(()=>{
@@ -787,34 +826,38 @@ async function startScan(){
         if(code)processScan(code.data);
       }
     },200);
-  }catch(e){document.getElementById('scanHint').textContent='ไม่สามารถเข้าถึงกล้องได้';}
+  }catch(e){const h=document.getElementById('scanHint');h.className='scan-hint text-center text-brick text-sm mb-4';h.textContent='ไม่สามารถเข้าถึงกล้องได้';}
 }
 function stopScan(){
   if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
   if(scanInt){clearInterval(scanInt);scanInt=null;}
   document.getElementById('scanWrap').classList.add('hidden');
-  document.getElementById('scanHint').textContent='นำ QR Code เข้ากรอบเพื่อดึงข้อมูลครุภัณฑ์';
+  const hint=document.getElementById('scanHint');
+  hint.className='scan-hint text-center text-muted text-sm mb-4';
+  hint.textContent='นำ QR Code เข้ากรอบเพื่อดึงข้อมูลครุภัณฑ์';
 }
 function renderScanResult(a){
   const isC=!!checks[a.id+'_'+curY];
   const lookup=scanMode!=='check';
-  document.getElementById('scanHint').textContent=isC?'ตรวจนับแล้ว — กดสแกนชิ้นถัดไป':'พบครุภัณฑ์ — กดติ๊กเมื่อตรวจเสร็จ';
+  const hint=document.getElementById('scanHint');
+  hint.className='scan-hint text-center text-muted text-sm mb-4';
+  hint.textContent=isC?'ตรวจนับแล้ว — กดสแกนชิ้นถัดไป':'พบครุภัณฑ์ — กดติ๊กเมื่อตรวจเสร็จ';
   const checkBlock=isC
-    ?`<div class="bg-emerald-50 text-emerald-700 rounded-xl p-3.5 text-sm text-center font-semibold mb-2">✓ ตรวจนับแล้ว ปี ${curY}</div>
-       <button onclick="scanToggleCheck('${a.id}')" class="w-full py-3 mb-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold active:bg-slate-200">ยกเลิกการตรวจ</button>`
-    :`<button onclick="scanToggleCheck('${a.id}')" class="w-full py-4 mb-3 bg-emerald-600 active:bg-emerald-800 text-white rounded-xl text-base font-bold shadow-md flex items-center justify-center gap-2"><i class="ti ti-circle-check text-xl"></i>✓ ติ๊กว่าตรวจนับแล้ว</button>`;
+    ?`<div class="bg-good-bg text-good rounded-xl p-3.5 text-sm text-center font-semibold mb-2">✓ ตรวจนับแล้ว ปี ${curY}</div>
+       <button onclick="scanToggleCheck('${a.id}')" class="w-full py-3 mb-3 bg-cream-input text-muted rounded-xl text-sm font-semibold active:bg-cream-line">ยกเลิกการตรวจ</button>`
+    :`<button onclick="scanToggleCheck('${a.id}')" class="w-full py-4 mb-3 bg-primary active:bg-primary-dark text-white rounded-xl text-base font-bold shadow-md flex items-center justify-center gap-2"><i class="ti ti-circle-check text-xl"></i>✓ ติ๊กว่าตรวจนับแล้ว</button>`;
   const lookupDetail=lookup?`<div class="text-xs space-y-1 mb-3">
-          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">แผนก</span><span class="font-semibold">${a.dept||'–'}</span></div>
-          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ผู้รับผิดชอบ</span><span class="font-semibold">${a.owner||'–'}</span></div>
-          <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ตรวจนับ ${curY}</span><span class="font-semibold ${isC?'text-emerald-600':'text-rose-600'}">${isC?'✓ ตรวจแล้ว':'✗ ยังไม่ตรวจ'}</span></div>
-          <div class="flex justify-between py-1"><span class="text-slate-400">ราคา</span><span class="font-semibold">${a.price?Number(a.price).toLocaleString()+' บาท':'–'}</span></div>
+          <div class="flex justify-between py-1 border-b border-cream-line/50"><span class="text-muted">แผนก</span><span class="font-semibold">${a.dept||'–'}</span></div>
+          <div class="flex justify-between py-1 border-b border-cream-line/50"><span class="text-muted">ผู้รับผิดชอบ</span><span class="font-semibold">${a.owner||'–'}</span></div>
+          <div class="flex justify-between py-1 border-b border-cream-line/50"><span class="text-muted">ตรวจนับ ${curY}</span><span class="font-semibold ${isC?'text-good':'text-brick'}">${isC?'✓ ตรวจแล้ว':'✗ ยังไม่ตรวจ'}</span></div>
+          <div class="flex justify-between py-1"><span class="text-muted">ราคา</span><span class="font-semibold">${a.price?Number(a.price).toLocaleString()+' บาท':'–'}</span></div>
         </div>`:'';
-  const lookupBtn=lookup?`<button onclick="openDetail('${a.id}');switchView('list')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold mb-2">ดูข้อมูลเต็ม / แก้ไข</button>`:'';
-  document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-    <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="ti ${catIcon(a.cat)}"></i></div><div class="flex-1 min-w-0"><div class="font-semibold text-slate-800">${a.name||''}</div><div class="text-xs text-slate-400">${a.code||''}${lookup?'':' · '+(a.dept||'–')}</div></div>${lookup?`<span class="${statusBadgeClass(a.status)} text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">${statusLabel(a.status)}</span>`:''}</div>
+  const lookupBtn=lookup?`<button onclick="openDetail('${a.id}');switchView('list')" class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold mb-2">ดูข้อมูลเต็ม / แก้ไข</button>`:'';
+  document.getElementById('scanResult').innerHTML=`<div class="ccard bg-cream-card rounded-2xl border border-cream-line shadow-soft p-5 fade-in">
+    <div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 bg-cream-input text-primary rounded-xl flex items-center justify-center"><i class="ti ${catIcon(a.cat)}"></i></div><div class="flex-1 min-w-0"><div class="font-semibold text-heading">${a.name||''}</div><div class="text-xs text-muted">${a.code||''}${lookup?'':' · '+(a.dept||'–')}</div></div>${lookup?`<span class="${statusBadgeClass(a.status)} text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">${statusLabel(a.status)}</span>`:''}</div>
     ${lookupDetail}
     ${checkBlock}
-    <button onclick="startScan()" class="w-full py-3.5 bg-blue-600 active:bg-blue-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-qrcode"></i>สแกนชิ้นถัดไป</button>
+    <button onclick="startScan()" class="w-full py-3.5 bg-primary active:bg-primary-dark text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md"><i class="ti ti-qrcode"></i>สแกนชิ้นถัดไป</button>
     ${lookupBtn}</div>`;
 }
 async function scanToggleCheck(id){
@@ -828,11 +871,12 @@ function processScan(data){
     const obj=JSON.parse(data);const a=assets.find(x=>x.id===obj.id||x.code===obj.code);
     if(!a){
       document.getElementById('scanHint').textContent='ไม่พบในระบบ';
-      document.getElementById('scanResult').innerHTML=`<div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 text-center"><p class="text-rose-600 text-sm mb-3">ไม่พบ QR Code นี้ในฐานข้อมูล</p><button onclick="document.getElementById('scanResult').innerHTML=''" class="px-4 py-2 bg-slate-100 rounded-xl text-sm font-semibold">ปิด</button></div>`;
+      document.getElementById('scanHint').className='scan-hint text-center text-brick text-sm mb-4';
+      document.getElementById('scanResult').innerHTML=`<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line shadow-soft p-8 fade-in"><div class="empty-icon"><i class="ti ti-qrcode-off"></i></div><h3 class="empty-title">ไม่พบ QR Code นี้ในฐานข้อมูล</h3><p class="empty-sub">ตรวจสอบว่า QR ถูกสร้างจากระบบนี้ หรือครุภัณฑ์ยังไม่ได้ลงทะเบียน</p><button onclick="document.getElementById('scanResult').innerHTML=''" class="mt-4 px-4 py-2 bg-cream-input rounded-xl text-sm font-semibold">ปิด</button></div>`;
       return;
     }
     renderScanResult(a);
-  }catch(e){document.getElementById('scanHint').textContent='QR Code นี้ไม่ใช่ข้อมูลครุภัณฑ์';}
+  }catch(e){const h=document.getElementById('scanHint');h.className='scan-hint text-center text-brick text-sm mb-4';h.textContent='QR Code นี้ไม่ใช่ข้อมูลครุภัณฑ์';}
 }
 
 // ---- รายงาน ----
@@ -844,12 +888,12 @@ function renderReport(){
   document.getElementById('rp4').textContent=ck;
   const cats={};assets.forEach(a=>{cats[a.cat||'อื่นๆ']=(cats[a.cat||'อื่นๆ']||0)+1;});
   document.getElementById('repCat').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,n])=>{
-    return `<div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-sm">
-      <span class="flex items-center gap-2"><div class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm"><i class="ti ${catIcon(c)}"></i></div>${c}</span>
+    return `<div class="flex items-center justify-between py-2 border-b border-cream-line/50 last:border-0 text-sm">
+      <span class="flex items-center gap-2"><div class="w-7 h-7 bg-cream-input text-primary rounded-lg flex items-center justify-center text-sm"><i class="ti ${catIcon(c)}"></i></div>${c}</span>
       <span class="font-semibold">${n} (${assets.length?Math.round(n/assets.length*100):0}%)</span></div>`;
-  }).join('')||'<p class="text-sm text-slate-400">ยังไม่มีข้อมูล</p>';
+  }).join('')||'<div class="empty-inline"><i class="ti ti-chart-bar-off"></i><span>ยังไม่มีข้อมูล</span></div>';
   const depts={};assets.forEach(a=>{if(a.dept)depts[a.dept]=(depts[a.dept]||0)+1;});
-  document.getElementById('repDept').innerHTML=Object.entries(depts).sort((a,b)=>b[1]-a[1]).map(([d,n])=>`<div class="flex justify-between py-2 border-b border-slate-50 last:border-0 text-sm"><span>${d}</span><span class="font-semibold">${n} รายการ</span></div>`).join('')||'<p class="text-sm text-slate-400">ยังไม่มีข้อมูล</p>';
+  document.getElementById('repDept').innerHTML=Object.entries(depts).sort((a,b)=>b[1]-a[1]).map(([d,n])=>`<div class="flex justify-between py-2 border-b border-cream-line/50 last:border-0 text-sm"><span>${d}</span><span class="font-semibold">${n} รายการ</span></div>`).join('')||'<div class="empty-inline"><i class="ti ti-building-community"></i><span>ยังไม่มีข้อมูล</span></div>';
 }
 
 // ---- ส่งออก ----
@@ -870,8 +914,8 @@ function exportPDF(){
 
 // ---- นำเข้าข้อมูล ----
 function downloadTemplate(){
-  const hd=['รหัสครุภัณฑ์','ชื่อครุภัณฑ์','หมวดหมู่','ยี่ห้อ/รุ่น','Serial No.','ราคา','ปีที่ซื้อ(พ.ศ.)','แผนก/ห้อง','ผู้รับผิดชอบ','สภาพ(ดี/ชำรุด/รอตรวจ)','หมายเหตุ'];
-  const sample=['COM-099','ตัวอย่าง คอมพิวเตอร์ Dell','คอมพิวเตอร์','Dell OptiPlex','SN-0001',18000,2567,'ห้องตัวอย่าง','ชื่อ นามสกุล','ดี','ตัวอย่างแถวข้อมูล (ลบแถวนี้ก่อนนำเข้าจริง)'];
+  const hd=['รหัสครุภัณฑ์','ชื่อครุภัณฑ์','หมวดหมู่','ยี่ห้อ/รุ่น','Serial No.','ราคา','ปีที่ซื้อ(พ.ศ.)','แผนก/ห้อง','ผู้รับผิดชอบ','สภาพ(ดี/สภาพดี/ชำรุด/รอตรวจ/รอตรวจสอบ)','หมายเหตุ'];
+  const sample=['COM-099','ตัวอย่าง คอมพิวเตอร์ Dell','คอมพิวเตอร์','Dell OptiPlex','SN-0001',18000,2567,'ห้องตัวอย่าง','ชื่อ นามสกุล','ดี','ตัวอย่างแถวข้อมูล (ลบแถวนี้ก่อนนำเข้าจริง) — สภาพ: ดี, สภาพดี, ชำรุด, ชำรุด/รอซ่อม, รอตรวจ, รอตรวจสอบ'];
   const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([hd,sample]);ws['!cols']=hd.map((_,i)=>({wch:i===1?28:16}));
   XLSX.utils.book_append_sheet(wb,ws,'แบบฟอร์มนำเข้า');XLSX.writeFile(wb,'แบบฟอร์มนำเข้าครุภัณฑ์.xlsx');
   toast('ดาวน์โหลดแบบฟอร์มสำเร็จ ✓');
@@ -892,6 +936,17 @@ function handleFile(file){
   reader.readAsArrayBuffer(file);
 }
 function normalizeHeader(h){return String(h||'').trim().replace(/\s+/g,'');}
+function normalizeImportStatus(raw){
+  const s=String(raw||'').trim().replace(/\s+/g,' ');
+  if(!s)return'ดี';
+  const key=s.toLowerCase();
+  const map={
+    'ดี':'ดี','สภาพดี':'ดี','good':'ดี','ok':'ดี',
+    'ชำรุด':'ชำรุด','ชำรุด/รอซ่อม':'ชำรุด','รอซ่อม':'ชำรุด','broken':'ชำรุด','damaged':'ชำรุด','repair':'ชำรุด',
+    'รอตรวจ':'รอตรวจ','รอตรวจสอบ':'รอตรวจ','pending':'รอตรวจ','wait':'รอตรวจ'
+  };
+  return map[key]||map[s]||null;
+}
 function parseImportRows(rows){
   if(!rows.length){toast('ไฟล์ไม่มีข้อมูล');return;}
   const header=rows[0].map(normalizeHeader);
@@ -906,7 +961,7 @@ function parseImportRows(rows){
     'ปีที่ซื้อ(พ.ศ.)':'year','ปีที่ซื้อ':'year','year':'year',
     'แผนก/ห้อง':'dept','แผนก':'dept','dept':'dept',
     'ผู้รับผิดชอบ':'owner','owner':'owner',
-    'สภาพ(ดี/ชำรุด/รอตรวจ)':'status','สภาพ':'status','status':'status',
+    'สภาพ(ดี/ชำรุด/รอตรวจ)':'status','สภาพ(ดี/สภาพดี/ชำรุด/รอตรวจ/รอตรวจสอบ)':'status','สภาพ':'status','status':'status',
     'หมายเหตุ':'note','note':'note'
   };
   const colIdx={};
@@ -916,15 +971,18 @@ function parseImportRows(rows){
     return;
   }
   const now=new Date().toISOString();
-  const parsed=[];let errCount=0;
+  const parsed=[];let errCount=0;const statusWarnings=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
     if(!r||r.every(c=>c===''||c===undefined||c===null))continue;
     const code=String(r[colIdx.code]!==undefined?r[colIdx.code]:'').trim();
     const name=String(r[colIdx.name]!==undefined?r[colIdx.name]:'').trim();
     if(!code||!name){errCount++;continue;}
-    let status=String(colIdx.status!==undefined?r[colIdx.status]:'').trim();
-    if(!['ดี','ชำรุด','รอตรวจ'].includes(status))status='รอตรวจ';
+    const rawStatus=String(colIdx.status!==undefined?r[colIdx.status]:'').trim();
+    const normalized=normalizeImportStatus(rawStatus);
+    let status;
+    if(normalized===null){status='รอตรวจ';statusWarnings.push({code,raw:rawStatus,row:i+1});}
+    else status=normalized;
     parsed.push({
       id:uid(),code,name,
       cat:String(colIdx.cat!==undefined?r[colIdx.cat]:'').trim()||'อื่นๆ',
@@ -940,29 +998,34 @@ function parseImportRows(rows){
     });
   }
   pendingImportRows=parsed;
-  renderImportPreview(parsed,errCount);
+  renderImportPreview(parsed,errCount,statusWarnings);
 }
-function renderImportPreview(parsed,errCount){
+function renderImportPreview(parsed,errCount,statusWarnings=[]){
   const area=document.getElementById('importPreviewArea');
   if(!parsed.length){
-    area.innerHTML=`<div class="bg-rose-50 text-rose-700 rounded-xl p-5 text-center text-sm"><i class="ti ti-file-x text-2xl block mb-2"></i>ไม่พบข้อมูลที่นำเข้าได้ ตรวจสอบว่าไฟล์มีข้อมูลตั้งแต่แถวที่ 2 เป็นต้นไป และคอลัมน์รหัส/ชื่อ ไม่ว่างเปล่า</div>`;
+    area.innerHTML=`<div class="empty bg-brick-bg border border-brick-ring rounded-xl p-6 shadow-soft"><div class="empty-icon" style="background:linear-gradient(145deg,#FDF1EE,#FBF3E3);color:rgba(155,68,52,.5)"><i class="ti ti-file-x"></i></div><h3 class="empty-title text-brick">ไม่พบข้อมูลที่นำเข้าได้</h3><p class="empty-sub text-brick/80">ตรวจสอบว่าไฟล์มีข้อมูลตั้งแต่แถวที่ 2 เป็นต้นไป และคอลัมน์รหัส/ชื่อ ไม่ว่างเปล่า</p></div>`;
     return;
   }
   const newCats=[...new Set(parsed.map(p=>p.cat))].filter(c=>!categories.includes(c));
+  const statusWarnHtml=statusWarnings.length?`<div class="bg-gold-bg border border-gold-ring text-gold rounded-xl p-3 mb-4 text-xs">
+      <div class="font-semibold mb-1.5"><i class="ti ti-alert-triangle"></i> พบ ${statusWarnings.length} แถวที่ค่าสถานะไม่ตรงรูปแบบ — จะถูกตั้งเป็น "รอตรวจ" อัตโนมัติ ตรวจสอบก่อนนำเข้า</div>
+      <div class="text-gold/80 leading-relaxed">${statusWarnings.slice(0,10).map(w=>`${w.code} (กรอก: "${w.raw||'(ว่าง)'}")`).join(' · ')}${statusWarnings.length>10?' · และอีก '+(statusWarnings.length-10)+' รายการ':''}</div>
+    </div>`:'';
   area.innerHTML=`
     <div class="grid grid-cols-3 gap-2 mb-4">
-      <div class="bg-white rounded-xl p-3 text-center shadow-sm"><div class="text-lg font-bold text-emerald-600">${parsed.length}</div><div class="text-[10px] text-slate-400">รายการพร้อมนำเข้า</div></div>
-      <div class="bg-white rounded-xl p-3 text-center shadow-sm"><div class="text-lg font-bold ${errCount?'text-rose-600':'text-slate-400'}">${errCount}</div><div class="text-[10px] text-slate-400">แถวข้อมูลไม่สมบูรณ์</div></div>
-      <div class="bg-white rounded-xl p-3 text-center shadow-sm"><div class="text-lg font-bold text-blue-600">${newCats.length}</div><div class="text-[10px] text-slate-400">หมวดหมู่ใหม่</div></div>
+      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold text-good">${parsed.length}</div><div class="text-[10px] text-muted">รายการพร้อมนำเข้า</div></div>
+      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold ${errCount?'text-brick':'text-muted'}">${errCount}</div><div class="text-[10px] text-muted">แถวข้อมูลไม่สมบูรณ์</div></div>
+      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold text-accent">${newCats.length}</div><div class="text-[10px] text-muted">หมวดหมู่ใหม่</div></div>
     </div>
-    <div class="bg-slate-50 rounded-xl p-3 mb-4 max-h-52 overflow-auto custom-scrollbar text-xs">
-      <table class="w-full"><thead><tr class="text-left"><th class="pb-2 text-slate-400 font-semibold">รหัส</th><th class="pb-2 text-slate-400 font-semibold">ชื่อ</th><th class="pb-2 text-slate-400 font-semibold">หมวดหมู่</th><th class="pb-2 text-slate-400 font-semibold">สภาพ</th></tr></thead><tbody>
-      ${parsed.slice(0,8).map(p=>`<tr class="border-t border-slate-100"><td class="py-1.5">${p.code}</td><td class="py-1.5">${p.name}</td><td class="py-1.5">${p.cat}</td><td class="py-1.5">${p.status}</td></tr>`).join('')}
-      ${parsed.length>8?`<tr><td colspan="4" class="text-center py-2 text-slate-400">และอีก ${parsed.length-8} รายการ</td></tr>`:''}
+    ${statusWarnHtml}
+    <div class="bg-cream rounded-xl p-3 mb-4 max-h-52 overflow-auto custom-scrollbar text-xs">
+      <table class="w-full"><thead><tr class="text-left"><th class="pb-2 text-muted font-semibold">รหัส</th><th class="pb-2 text-muted font-semibold">ชื่อ</th><th class="pb-2 text-muted font-semibold">หมวดหมู่</th><th class="pb-2 text-muted font-semibold">สภาพ</th></tr></thead><tbody>
+      ${parsed.slice(0,8).map(p=>`<tr class="border-t border-cream-line"><td class="py-1.5">${p.code}</td><td class="py-1.5">${p.name}</td><td class="py-1.5">${p.cat}</td><td class="py-1.5">${p.status}</td></tr>`).join('')}
+      ${parsed.length>8?`<tr><td colspan="4" class="text-center py-2 text-muted">และอีก ${parsed.length-8} รายการ</td></tr>`:''}
       </tbody></table>
     </div>
-    <button onclick="confirmImport()" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mb-2"><i class="ti ti-upload"></i>นำเข้า ${parsed.length} รายการ และซิงค์ Google Sheets</button>
-    <button onclick="document.getElementById('importPreviewArea').innerHTML='';document.getElementById('fileInput').value=''" class="w-full py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">เลือกไฟล์อื่น</button>
+    <button onclick="confirmImport()" class="btn-gold w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mb-2"><i class="ti ti-upload"></i>นำเข้า ${parsed.length} รายการ และซิงค์ Google Sheets</button>
+    <button onclick="document.getElementById('importPreviewArea').innerHTML='';document.getElementById('fileInput').value=''" class="w-full py-2.5 bg-cream-input text-muted rounded-xl text-sm font-semibold">เลือกไฟล์อื่น</button>
   `;
 }
 async function confirmImport(){
@@ -985,9 +1048,9 @@ async function confirmImport(){
 document.addEventListener('DOMContentLoaded',()=>{
   const dz=document.getElementById('dropZone');
   if(dz){
-    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('border-blue-500');});
-    dz.addEventListener('dragleave',()=>{dz.classList.remove('border-blue-500');});
-    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('border-blue-500');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('border-primary');});
+    dz.addEventListener('dragleave',()=>{dz.classList.remove('border-primary');});
+    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('border-primary');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
   }
 });
 
