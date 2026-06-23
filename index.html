@@ -581,6 +581,17 @@ function openEdit(id){
 async function saveAsset(){
   const code=document.getElementById('fc').value.trim(),name=document.getElementById('fn').value.trim();
   if(!code||!name){toast('กรุณากรอกรหัสและชื่อครุภัณฑ์');return;}
+  const codeKey=code.toLowerCase();
+  const dup=assets.find(a=>{
+    if(String(a.code||'').trim().toLowerCase()!==codeKey)return false;
+    if(editId&&a.id===editId)return false;
+    return true;
+  });
+  if(dup){
+    toast('รหัส '+code+" ซ้ำกับ '"+(dup.name||'(ไม่มีชื่อ)')+"' ที่มีอยู่แล้ว");
+    document.getElementById('fc').focus();
+    return;
+  }
   const now=new Date().toISOString();
   const asset={id:editId||uid(),code,name,cat:document.getElementById('fcat').value,brand:document.getElementById('fbr').value.trim(),serial:document.getElementById('fse').value.trim(),price:document.getElementById('fpr').value,year:document.getElementById('fyr').value,dept:document.getElementById('fdp').value.trim(),owner:document.getElementById('fow').value.trim(),status:document.getElementById('fst').value,note:document.getElementById('fno').value.trim(),updatedAt:now,createdAt:editId?(assets.find(x=>x.id===editId)||{}).createdAt||now:now};
   closeModal('addModal');
