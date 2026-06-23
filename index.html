@@ -772,7 +772,9 @@ function printBulkQR(){
 
 // ---- ตรวจนับ ----
 function renderCheck(){
-  const yrs=[curY,curY-1,curY-2];
+  const thisY=new Date().getFullYear()+543;
+  const yrsFromChecks=[...new Set(Object.keys(checks).map(k=>+k.split('_').pop()).filter(y=>!isNaN(y)))];
+  const yrs=[...new Set([thisY,thisY-1,...yrsFromChecks])].sort((a,b)=>b-a).slice(0,10);
   document.getElementById('yearPills').innerHTML=yrs.map(y=>{
     const on=y===curY;
     return `<button onclick="setYear(${y})" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${on?'bg-primary text-white ring-1 ring-accent/50':'bg-cream-card border border-cream-line text-muted'}">${y}</button>`;
@@ -785,6 +787,11 @@ function renderCheck(){
   const data=assets.filter(a=>!q||[(a.name||''),(a.code||''),(a.dept||'')].some(v=>v.toLowerCase().includes(q)));
   const list=document.getElementById('checkList');
   if(!assets.length){list.innerHTML='<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line p-10 shadow-soft"><div class="empty-icon"><i class="ti ti-database-off"></i></div><h3 class="empty-title">ยังไม่มีครุภัณฑ์</h3><p class="empty-sub">เมื่อมีครุภัณฑ์ในระบบ รายการจะแสดงที่นี่</p></div>';return;}
+  const hasChecksForYear=Object.keys(checks).some(k=>k.endsWith('_'+curY));
+  if(!hasChecksForYear&&curY!==thisY&&curY!==thisY-1){
+    list.innerHTML='<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line p-10 shadow-soft"><div class="empty-icon"><i class="ti ti-calendar-off"></i></div><h3 class="empty-title">ยังไม่มีการตรวจนับในปี '+curY+'</h3><p class="empty-sub">เลือกปีอื่นที่มีข้อมูลการตรวจนับ หรือกลับมาตรวจในปีปัจจุบัน</p></div>';
+    return;
+  }
   if(!data.length){list.innerHTML='<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line p-10 shadow-soft"><div class="empty-icon"><i class="ti ti-search-off"></i></div><h3 class="empty-title">ไม่พบรายการ</h3><p class="empty-sub">ไม่มีรายการตรงกับคำค้นหา</p></div>';return;}
   list.innerHTML=data.map(a=>{
     const isC=!!checks[a.id+'_'+curY];
@@ -997,34 +1004,58 @@ function parseImportRows(rows){
       createdAt:now,updatedAt:now
     });
   }
-  pendingImportRows=parsed;
-  renderImportPreview(parsed,errCount,statusWarnings);
+  const existingByCode={};
+  assets.forEach(a=>{const c=String(a.code||'').trim();if(c)existingByCode[c]=a;});
+  const codeCounts={};
+  parsed.forEach(p=>{codeCounts[p.code]=(codeCounts[p.code]||0)+1;});
+  const okRows=[],dupSystem=[],dupFile=[];
+  parsed.forEach(p=>{
+    if(codeCounts[p.code]>1){dupFile.push(p);return;}
+    const existing=existingByCode[p.code];
+    if(existing){dupSystem.push({code:p.code,name:p.name,existingName:existing.name||''});return;}
+    okRows.push(p);
+  });
+  pendingImportRows=okRows;
+  renderImportPreview(okRows,errCount,statusWarnings,dupSystem,dupFile);
 }
-function renderImportPreview(parsed,errCount,statusWarnings=[]){
+function renderImportPreview(okRows,errCount,statusWarnings=[],dupSystem=[],dupFile=[]){
   const area=document.getElementById('importPreviewArea');
-  if(!parsed.length){
+  const dupCount=dupSystem.length+dupFile.length;
+  if(!okRows.length&&!dupCount){
     area.innerHTML=`<div class="empty bg-brick-bg border border-brick-ring rounded-xl p-6 shadow-soft"><div class="empty-icon" style="background:linear-gradient(145deg,#FDF1EE,#FBF3E3);color:rgba(155,68,52,.5)"><i class="ti ti-file-x"></i></div><h3 class="empty-title text-brick">ไม่พบข้อมูลที่นำเข้าได้</h3><p class="empty-sub text-brick/80">ตรวจสอบว่าไฟล์มีข้อมูลตั้งแต่แถวที่ 2 เป็นต้นไป และคอลัมน์รหัส/ชื่อ ไม่ว่างเปล่า</p></div>`;
     return;
   }
-  const newCats=[...new Set(parsed.map(p=>p.cat))].filter(c=>!categories.includes(c));
+  const newCats=[...new Set(okRows.map(p=>p.cat))].filter(c=>!categories.includes(c));
+  const dupFileCodes=[...new Set(dupFile.map(p=>p.code))];
+  const dupWarnHtml=dupCount?`<div class="bg-gold-bg border border-gold-ring text-gold rounded-xl p-3 mb-4 text-xs space-y-1.5">
+      <div class="font-semibold mb-1"><i class="ti ti-alert-triangle"></i> ${okRows.length} รายการนำเข้าได้, ${dupCount} รายการรหัสซ้ำ (ข้ามอัตโนมัติ)</div>
+      ${dupSystem.map(d=>`<div class="text-gold/90">⚠️ รหัส ${d.code} ซ้ำกับ '${d.existingName||'(ไม่มีชื่อ)'}' ที่มีอยู่แล้ว — จะข้ามรายการนี้</div>`).join('')}
+      ${dupFileCodes.map(c=>`<div class="text-gold/90">⚠️ รหัส ${c} ซ้ำกันหลายแถวในไฟล์ — จะข้ามทั้งหมด</div>`).join('')}
+    </div>`:`<div class="text-xs text-muted mb-4">${okRows.length} รายการนำเข้าได้, 0 รายการรหัสซ้ำ (ข้ามอัตโนมัติ)</div>`;
   const statusWarnHtml=statusWarnings.length?`<div class="bg-gold-bg border border-gold-ring text-gold rounded-xl p-3 mb-4 text-xs">
       <div class="font-semibold mb-1.5"><i class="ti ti-alert-triangle"></i> พบ ${statusWarnings.length} แถวที่ค่าสถานะไม่ตรงรูปแบบ — จะถูกตั้งเป็น "รอตรวจ" อัตโนมัติ ตรวจสอบก่อนนำเข้า</div>
       <div class="text-gold/80 leading-relaxed">${statusWarnings.slice(0,10).map(w=>`${w.code} (กรอก: "${w.raw||'(ว่าง)'}")`).join(' · ')}${statusWarnings.length>10?' · และอีก '+(statusWarnings.length-10)+' รายการ':''}</div>
     </div>`:'';
+  const allDupMsg=!okRows.length?`<p class="text-xs text-brick text-center mb-3 font-semibold">ทุกรายการมีรหัสซ้ำกับที่มีอยู่ในระบบแล้ว ไม่มีรายการใหม่ที่จะนำเข้า</p>`:'';
+  const importBtn=okRows.length
+    ?`<button onclick="confirmImport()" class="btn-gold w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mb-2"><i class="ti ti-upload"></i>นำเข้า ${okRows.length} รายการ และซิงค์ Google Sheets</button>`
+    :`<button disabled class="w-full py-2.5 bg-cream-line text-muted rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mb-2 cursor-not-allowed opacity-60"><i class="ti ti-upload"></i>ไม่มีรายการให้นำเข้า</button>`;
   area.innerHTML=`
     <div class="grid grid-cols-3 gap-2 mb-4">
-      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold text-good">${parsed.length}</div><div class="text-[10px] text-muted">รายการพร้อมนำเข้า</div></div>
-      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold ${errCount?'text-brick':'text-muted'}">${errCount}</div><div class="text-[10px] text-muted">แถวข้อมูลไม่สมบูรณ์</div></div>
+      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold text-good">${okRows.length}</div><div class="text-[10px] text-muted">รายการพร้อมนำเข้า</div></div>
+      <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold ${errCount||dupCount?'text-brick':'text-muted'}">${errCount+dupCount}</div><div class="text-[10px] text-muted">แถวข้าม/ไม่สมบูรณ์</div></div>
       <div class="bg-cream-card rounded-xl p-3 text-center shadow-soft"><div class="text-lg font-bold text-accent">${newCats.length}</div><div class="text-[10px] text-muted">หมวดหมู่ใหม่</div></div>
     </div>
+    ${dupWarnHtml}
     ${statusWarnHtml}
-    <div class="bg-cream rounded-xl p-3 mb-4 max-h-52 overflow-auto custom-scrollbar text-xs">
+    ${allDupMsg}
+    ${okRows.length?`<div class="bg-cream rounded-xl p-3 mb-4 max-h-52 overflow-auto custom-scrollbar text-xs">
       <table class="w-full"><thead><tr class="text-left"><th class="pb-2 text-muted font-semibold">รหัส</th><th class="pb-2 text-muted font-semibold">ชื่อ</th><th class="pb-2 text-muted font-semibold">หมวดหมู่</th><th class="pb-2 text-muted font-semibold">สภาพ</th></tr></thead><tbody>
-      ${parsed.slice(0,8).map(p=>`<tr class="border-t border-cream-line"><td class="py-1.5">${p.code}</td><td class="py-1.5">${p.name}</td><td class="py-1.5">${p.cat}</td><td class="py-1.5">${p.status}</td></tr>`).join('')}
-      ${parsed.length>8?`<tr><td colspan="4" class="text-center py-2 text-muted">และอีก ${parsed.length-8} รายการ</td></tr>`:''}
+      ${okRows.slice(0,8).map(p=>`<tr class="border-t border-cream-line"><td class="py-1.5">${p.code}</td><td class="py-1.5">${p.name}</td><td class="py-1.5">${p.cat}</td><td class="py-1.5">${p.status}</td></tr>`).join('')}
+      ${okRows.length>8?`<tr><td colspan="4" class="text-center py-2 text-muted">และอีก ${okRows.length-8} รายการ</td></tr>`:''}
       </tbody></table>
-    </div>
-    <button onclick="confirmImport()" class="btn-gold w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mb-2"><i class="ti ti-upload"></i>นำเข้า ${parsed.length} รายการ และซิงค์ Google Sheets</button>
+    </div>`:''}
+    ${importBtn}
     <button onclick="document.getElementById('importPreviewArea').innerHTML='';document.getElementById('fileInput').value=''" class="w-full py-2.5 bg-cream-input text-muted rounded-xl text-sm font-semibold">เลือกไฟล์อื่น</button>
   `;
 }
@@ -1039,9 +1070,12 @@ async function confirmImport(){
   renderList();updateStats();checkNotif();renderCategoryChips();populateCatSelect();
   closeModal('importModal');
   try{
-    await apip({action:'bulkImport',assets:pendingImportRows});
+    const res=await apip({action:'bulkImport',assets:pendingImportRows});
     for(const c of newCats){await apip({action:'addCategory',name:c});}
-    setSyncState('ok');toast('นำเข้าและซิงค์สำเร็จ ✓ ('+pendingImportRows.length+' รายการ)');
+    setSyncState('ok');
+    let msg='นำเข้าและซิงค์สำเร็จ ✓ ('+(res.inserted!=null?res.inserted:pendingImportRows.length)+' รายการ)';
+    if(res.skipped>0)msg+=' — ข้าม '+res.skipped+' รายการ (รหัสซ้ำ)';
+    toast(msg);
   }catch(e){setSyncState('err');toast('นำเข้าในเครื่องแล้ว ซิงค์ได้เมื่อออนไลน์');}
   pendingImportRows=[];
 }
