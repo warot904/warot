@@ -332,7 +332,7 @@ body{font-family:'Noto Sans Thai',sans-serif}
 <div class="toast" id="toast"></div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbyHVONimSpDq7wCfvtaZpxLS_JGOhwjFRPaK86jTEoHBJkTGmc9UQiBrsUOe_q81eGo/exec';
+const API='https://script.google.com/macros/s/AKfycbyz72slZ8AeYirIOf8gdTib_Xaq8YnUJuxSSlhMb5-DV07VlYrxzp3D09ys7oBsFnXW/exec';
 let assets=[],checks={},categories=[],filt='all',curY=new Date().getFullYear()+543,editId=null,scanStream=null,scanInt=null,busy=false,scanMode='lookup',pendingImportRows=[];
 let qrSelMode=false,qrSelected=new Set();
 let currentView='list';
@@ -357,13 +357,50 @@ function setSyncState(s){
 async function apig(p){const r=await fetch(API+'?'+new URLSearchParams(p),{redirect:'follow'});const tx=await r.text();return JSON.parse(tx);}
 async function apip(d){const r=await fetch(API,{method:'POST',body:JSON.stringify(d),redirect:'follow'});const tx=await r.text();return JSON.parse(tx);}
 
+function getPendingChecks(){try{return JSON.parse(localStorage.getItem('pendingChecks')||'[]');}catch(e){return [];}}
+function setPendingChecks(arr){localStorage.setItem('pendingChecks',JSON.stringify(arr));}
+function checksToObject(raw){
+  if(Array.isArray(raw)){const o={};raw.forEach(c=>{if(c&&c.key)o[c.key]={by:c.by,at:c.at};});return o;}
+  if(raw&&typeof raw==='object')return raw;
+  return {};
+}
+function applyPendingToChecks(pending){
+  pending.forEach(op=>{if(op.remove)delete checks[op.key];else checks[op.key]={by:op.by,at:op.at};});
+}
+
+async function flushPendingChecks(){
+  const pending=getPendingChecks();
+  if(!pending.length)return {ok:true,sent:0};
+  const remain=[];
+  let sent=0;
+  for(const op of pending){
+    try{
+      const res=await apip({action:'toggleCheck',key:op.key,remove:!!op.remove,by:op.by,at:op.at});
+      if(res&&res.ok&&res.key===op.key)sent++;
+      else remain.push(op);
+    }catch(e){remain.push(op);}
+  }
+  setPendingChecks(remain);
+  return {ok:!remain.length,sent,remain:remain.length};
+}
+function pushCheckOp(op){
+  const pending=getPendingChecks();
+  const i=pending.findIndex(p=>p.key===op.key);
+  if(i!==-1)pending.splice(i,1);
+  pending.push(op);
+  setPendingChecks(pending);
+  return flushPendingChecks();
+}
+
 async function syncAll(forceToast){
   if(busy)return;busy=true;setSyncState('loading');
   const t0=performance.now();
   try{
+    await flushPendingChecks();
     const bundle=await apig({action:'getBundle'});
     assets=Array.isArray(bundle.assets)?bundle.assets:[];
-    checks=(bundle.checks&&typeof bundle.checks==='object'&&!Array.isArray(bundle.checks))?bundle.checks:{};
+    checks=checksToObject(bundle.checks);
+    applyPendingToChecks(getPendingChecks());
     categories=Array.isArray(bundle.categories)&&bundle.categories.length?bundle.categories:Object.keys(DEFAULT_CAT_ICONS);
     localStorage.setItem('ab',JSON.stringify(assets));
     localStorage.setItem('cb',JSON.stringify(checks));
@@ -817,11 +854,15 @@ function renderCheck(){
 }
 function setYear(y){curY=y;renderCheck();updateStats();checkNotif();}
 async function toggleCheck(id){
-  const key=id+'_'+curY,rem=!!checks[key];
-  if(rem)delete checks[key];else checks[key]={by:'ผู้ใช้',at:new Date().toISOString()};
+  const key=id+'_'+curY,rem=!!checks[key],at=new Date().toISOString();
+  if(rem)delete checks[key];else checks[key]={by:'ผู้ใช้',at};
   localStorage.setItem('cb',JSON.stringify(checks));renderList();renderCheck();updateStats();checkNotif();
-  try{await apip({action:'toggleCheck',key,remove:rem,by:'ผู้ใช้',at:new Date().toISOString()});setSyncState('ok');toast(rem?'ยกเลิกการตรวจ':'บันทึกตรวจนับสำเร็จ ✓');}
-  catch(e){setSyncState('err');toast('บันทึกในเครื่องแล้ว');}
+  try{
+    const res=await pushCheckOp({key,remove:rem,by:'ผู้ใช้',at});
+    if(res.ok)setSyncState('ok');
+    else setSyncState('err');
+    toast(rem?'ยกเลิกการตรวจ':res.ok?'บันทึกตรวจนับสำเร็จ ✓':'บันทึกในเครื่องแล้ว รอซิงค์');
+  }catch(e){setSyncState('err');toast('บันทึกในเครื่องแล้ว รอซิงค์');}
 }
 
 // ---- สแกน QR ----
@@ -883,7 +924,7 @@ async function scanToggleCheck(id){
   const a=assets.find(x=>x.id===id);
   if(a)renderScanResult(a);
 }
-function processScan(data){
+async function processScan(data){
   stopScan();
   try{
     const obj=JSON.parse(data);const a=assets.find(x=>x.id===obj.id||x.code===obj.code);
@@ -891,6 +932,22 @@ function processScan(data){
       document.getElementById('scanHint').textContent='ไม่พบในระบบ';
       document.getElementById('scanHint').className='scan-hint text-center text-brick text-sm mb-4';
       document.getElementById('scanResult').innerHTML=`<div class="empty ccard bg-cream-card rounded-2xl border border-cream-line shadow-soft p-8 fade-in"><div class="empty-icon"><i class="ti ti-qrcode-off"></i></div><h3 class="empty-title">ไม่พบ QR Code นี้ในฐานข้อมูล</h3><p class="empty-sub">ตรวจสอบว่า QR ถูกสร้างจากระบบนี้ หรือครุภัณฑ์ยังไม่ได้ลงทะเบียน</p><button onclick="document.getElementById('scanResult').innerHTML=''" class="mt-4 px-4 py-2 bg-cream-input rounded-xl text-sm font-semibold">ปิด</button></div>`;
+      return;
+    }
+    if(scanMode==='check'&&!checks[a.id+'_'+curY]){
+      const key=a.id+'_'+curY,at=new Date().toISOString();
+      const hint=document.getElementById('scanHint');
+      hint.className='scan-hint text-center text-sm mb-4 loading';
+      hint.textContent='กำลังบันทึก...';
+      checks[key]={by:'สแกน QR',at};
+      localStorage.setItem('cb',JSON.stringify(checks));
+      updateStats();checkNotif();
+      try{
+        const res=await pushCheckOp({key,remove:false,by:'สแกน QR',at});
+        if(res.ok){hint.className='scan-hint text-center text-good text-sm mb-4';hint.textContent='บันทึกตรวจนับสำเร็จ ✓';}
+        else{hint.className='scan-hint text-center text-gold text-sm mb-4';hint.textContent='บันทึกในเครื่องแล้ว รอซิงค์';}
+      }catch(e){hint.className='scan-hint text-center text-gold text-sm mb-4';hint.textContent='บันทึกในเครื่องแล้ว รอซิงค์';}
+      renderScanResult(a);renderList();renderCheck();
       return;
     }
     renderScanResult(a);
